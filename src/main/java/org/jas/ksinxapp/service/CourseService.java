@@ -1,0 +1,70 @@
+package org.jas.ksinxapp.service;
+
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.jas.ksinxapp.dtos.CourseCreateRequest;
+import org.jas.ksinxapp.dtos.CourseResponse;
+import org.jas.ksinxapp.mappers.CourseMapper;
+import org.jas.ksinxapp.model.Course;
+import org.jas.ksinxapp.repo.CourseRepo;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class CourseService {
+
+    private final CourseRepo courseRepo;
+    private final CourseMapper courseMapper;
+
+    public CourseService(CourseRepo courseRepo, CourseMapper courseMapper) {
+        this.courseRepo = courseRepo;
+        this.courseMapper = courseMapper;
+    }
+
+    @Transactional
+    public CourseResponse createResponse(CourseCreateRequest request) {
+        //convert dto to entity
+        Course course = courseMapper.toEntity(request);
+
+        //save to postgresql
+        Course savedCourse = courseRepo.save(course);
+
+        //convert back to dto and return
+        return courseMapper.toResponse(savedCourse);
+    }
+
+    @Transactional
+    public List<CourseResponse> getAllCourses(){
+        return courseRepo.findAll()
+                .stream()
+                .map(courseMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CourseResponse findById(Long id){
+        Course course = courseRepo.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "course not found"));
+        return courseMapper.toResponse(course);
+    }
+
+    @Transactional
+    public CourseResponse updateResponse(Long id, CourseCreateRequest request) {
+        Course course = courseRepo.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "course not found"));
+
+        courseMapper.updateEntityFromDto(request, course);
+
+        return courseMapper.toResponseDto(course);
+    }
+
+    @Transactional
+    public void deleteById(Long id){
+        courseRepo.deleteById(id);
+    }
+}
