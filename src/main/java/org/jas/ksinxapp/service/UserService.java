@@ -1,12 +1,23 @@
 package org.jas.ksinxapp.service;
 
 import jakarta.transaction.Transactional;
+import org.jas.ksinxapp.dtos.LoginRequest;
+import org.jas.ksinxapp.dtos.LoginResponse;
 import org.jas.ksinxapp.dtos.StudentRegistrationRequest;
 import org.jas.ksinxapp.dtos.StudentResponse;
+import org.jas.ksinxapp.jwt.JwtService;
+import org.jas.ksinxapp.mappers.LoginMapper;
 import org.jas.ksinxapp.mappers.UserMapper;
 import org.jas.ksinxapp.model.User;
 import org.jas.ksinxapp.repo.UserRepo;
+import org.jas.ksinxapp.security.SecurityConfig;
+import org.jas.ksinxapp.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -18,10 +29,18 @@ public class UserService {
 
     private final UserRepo userRepo;
     private final UserMapper userMapper;
+    private final LoginMapper loginMapper;
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder  passwordEncoder;
+    private final JwtService  jwtService;
 
-    public UserService(UserRepo userRepo, UserMapper userMapper) {
+    public UserService(UserRepo userRepo, UserMapper userMapper, LoginMapper loginMapper ,   AuthenticationManager authenticationManager,  PasswordEncoder passwordEncoder,  JwtService jwtService) {
         this.userRepo = userRepo;
         this.userMapper = userMapper;
+        this.loginMapper = loginMapper;
+        this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -39,7 +58,7 @@ public class UserService {
         newUser.setRole(User.Role.USER);
 
         //replace with Bcrypt later
-        newUser.setPassword(request.password());
+        newUser.setPassword(passwordEncoder.encode(request.password()));
 
         //save to postgresql
         User savedUser = userRepo.save(newUser);
@@ -47,6 +66,30 @@ public class UserService {
         //return dto response
         return userMapper.toResponse(savedUser);
 
+    }
+
+    public LoginResponse login(LoginRequest request) {
+        //Authenticates the user
+        //triggers userDetailService and compares passwords using encoder
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.fullName(),
+                        request.password()
+                )
+        );
+
+        //if we reach here authentication was successful
+        //get the principal and cast it to your custom class
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+
+        //GENERATE THE TOKEN HERE
+        // Use the username (fullName) from the principal to create the ticket
+        assert principal != null;
+        String token = jwtService.generateToken(principal.getUsername());
+
+
+        //extract the actual entity from your principal
+        return loginMapper.loginResponse(principal.getUser(),  token);
     }
 
     @Transactional
