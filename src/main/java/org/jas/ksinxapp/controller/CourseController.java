@@ -4,7 +4,10 @@ import jakarta.validation.Valid;
 import org.jas.ksinxapp.dtos.CourseCreateRequest;
 import org.jas.ksinxapp.dtos.CourseResponse;
 import org.jas.ksinxapp.service.CourseService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +23,13 @@ public class CourseController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<CourseResponse>> findAll() {
-        return ResponseEntity.ok(service.getAllCourses());
+    public ResponseEntity<List<CourseResponse>> findAll(@RequestParam(required = false, defaultValue = "1") int pageNo,
+                                                        @RequestParam(required = false, defaultValue = "5") int pageSize,
+                                                        @RequestParam(required = false, defaultValue = "id") String sortBy,
+                                                        @RequestParam(required = false, defaultValue = "asc") String sortDir) {
+//        PageRequest pageRequest = PageRequest.of(pageNo -1, pageSize, Sort.by(Sort.Direction.ASC, "name"));
+
+        return ResponseEntity.ok(service.getAllResponse(pageNo, pageSize, sortBy, sortDir));
     }
 
     @GetMapping("/{id}")
@@ -35,11 +43,13 @@ public class CourseController {
     }
 
     @PostMapping("/add")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<CourseResponse> add(@Valid @RequestBody CourseCreateRequest request){
         return ResponseEntity.ok(service.createResponse(request));
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void delete(@PathVariable @Valid Long id){
         service.deleteById(id);
     }

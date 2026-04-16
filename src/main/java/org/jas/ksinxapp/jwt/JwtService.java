@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.Bytes;
+import org.jas.ksinxapp.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,11 @@ import java.util.Map;
 
 @Component
 public class JwtService {
+
+    private final UserPrincipal userPrincipal;
+    public JwtService(UserPrincipal userPrincipal) {
+        this.userPrincipal = userPrincipal;
+    }
 
     @Value("${jwt.secret}")
     private String jwtSecret;

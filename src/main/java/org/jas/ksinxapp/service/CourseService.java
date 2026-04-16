@@ -8,6 +8,10 @@ import org.jas.ksinxapp.dtos.CourseResponse;
 import org.jas.ksinxapp.mappers.CourseMapper;
 import org.jas.ksinxapp.model.Course;
 import org.jas.ksinxapp.repo.CourseRepo;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -39,8 +43,19 @@ public class CourseService {
     }
 
     @Transactional
-    public List<CourseResponse> getAllCourses(){
-        return courseRepo.findAll()
+    public List<CourseResponse> getAllResponse(int pageNo, int pageSize, String sortBy, String sortDir) {
+
+        //handle sorting
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ?Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        //handle pagination
+        Pageable pageable = PageRequest.of(pageNo -1, pageSize, sort);
+
+//        //handle dynamic filtering with specification
+//        Specification<Course> specification = Specification.where(Specification.unrestricted())
+        return courseRepo.findAll(pageable)
                 .stream()
                 .map(courseMapper::toResponse)
                 .collect(Collectors.toList());
