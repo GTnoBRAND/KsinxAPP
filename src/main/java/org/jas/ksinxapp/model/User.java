@@ -1,12 +1,14 @@
 package org.jas.ksinxapp.model;
 
 import jakarta.persistence.*;
+import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.List;
 
 @Entity
 @Table(name = "users")
+@Component
 public class User implements Serializable{
 
     @Id

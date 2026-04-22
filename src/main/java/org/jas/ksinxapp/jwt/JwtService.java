@@ -23,6 +23,7 @@ import java.util.Map;
 public class JwtService {
 
     private final UserPrincipal userPrincipal;
+
     public JwtService(UserPrincipal userPrincipal) {
         this.userPrincipal = userPrincipal;
     }
