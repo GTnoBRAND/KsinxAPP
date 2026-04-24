@@ -1,8 +1,5 @@
 package org.jas.ksinxapp.payment;
 
-import com.paypal.base.rest.APIContext;
-import com.paypal.base.rest.OAuthTokenCredential;
-import com.paypal.base.rest.PayPalRESTException;
 import com.paypal.sdk.Environment;
 import com.paypal.sdk.PaypalServerSdkClient;
 import com.paypal.sdk.authentication.ClientCredentialsAuthModel;
@@ -10,10 +7,6 @@ import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Configuration
 public class PaymentConfig {
@@ -27,6 +20,10 @@ public class PaymentConfig {
 
     @Bean
     public PaypalServerSdkClient paypalServerSdkClient(){
+        Environment environment = "production".equals(mode)
+                ? Environment.PRODUCTION
+                : Environment.SANDBOX;
+
         return new PaypalServerSdkClient.Builder()
                 .loggingConfig(builder -> builder.level(Level.INFO))
                 .environment(mode.equalsIgnoreCase("live")
