@@ -1,16 +1,15 @@
 package org.jas.ksinxapp.security;
 
-import lombok.Getter;
 import org.jas.ksinxapp.model.User;
-import org.jas.ksinxapp.repo.UserRepo;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Collections;
-
+@Component
 public class UserPrincipal implements UserDetails {
 
     private final User user;
