@@ -1,6 +1,5 @@
 package org.jas.ksinxapp.model;
 
-import com.paypal.sdk.models.SubscriptionPlanStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Subscription {
+public class SubscriptionModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
