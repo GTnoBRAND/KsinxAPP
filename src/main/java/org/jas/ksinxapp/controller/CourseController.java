@@ -43,7 +43,7 @@ public class CourseController {
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<CourseResponse> add(@Valid @RequestBody CourseCreateRequest request){
         return ResponseEntity.ok(service.createResponse(request));
     }

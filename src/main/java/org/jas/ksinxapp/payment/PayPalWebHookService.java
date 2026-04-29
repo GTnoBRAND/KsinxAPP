@@ -15,12 +15,17 @@ import java.time.LocalDateTime;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class PayPalWebHookService {
 
     private final SubscriptionRepo subscriptionRepo;
     private final PaymentTransactionRepo paymentTransactionRepo;
     private final ObjectMapper objectMapper;
+
+    public PayPalWebHookService(SubscriptionRepo subscriptionRepo, PaymentTransactionRepo paymentTransactionRepo, ObjectMapper objectMapper) {
+        this.subscriptionRepo = subscriptionRepo;
+        this.paymentTransactionRepo = paymentTransactionRepo;
+        this.objectMapper = objectMapper;
+    }
 
     //handle PayPal webhook events
     @Transactional

@@ -54,7 +54,7 @@ public class SecurityConfig {
                         e.authenticationEntryPoint(authEntryPointJwt))
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/", "/register.html","/index.html", "/style.css", "/app.js","/dashboard.html", "/register.html", "/dashboard.js").permitAll()
+                        .requestMatchers("/", "/register.html").permitAll()
                         // Publicly accessible paths
                         .requestMatchers("/api/course/all","/api/v1/users/register",
                                 "/api/v1/users/login").permitAll()

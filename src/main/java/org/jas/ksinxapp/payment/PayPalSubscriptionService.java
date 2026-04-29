@@ -20,15 +20,16 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class PayPalSubscriptionService {
 
     private final PaypalServerSdkClient paypalServerSdkClient;
     private final SubscriptionRepo subscriptionRepo;
 
+    public PayPalSubscriptionService(PaypalServerSdkClient paypalServerSdkClient, SubscriptionRepo subscriptionRepo) {
+        this.paypalServerSdkClient = paypalServerSdkClient;
+        this.subscriptionRepo = subscriptionRepo;
+    }
 
-    @Value("${app.base-uri}")
-    private String baseUrl;
 
     //create a billing plan
 

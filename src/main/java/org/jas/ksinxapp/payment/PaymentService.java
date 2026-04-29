@@ -20,14 +20,15 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class PaymentService {
 
     private final PaypalServerSdkClient paypalServerSdkClient;
     private final PaymentTransactionRepo paymentTransactionRepo;
 
-    @Value("${app.base-uri}")
-    private String baseUrl;
+    public PaymentService(PaypalServerSdkClient paypalServerSdkClient, PaymentTransactionRepo paymentTransactionRepo) {
+        this.paypalServerSdkClient = paypalServerSdkClient;
+        this.paymentTransactionRepo = paymentTransactionRepo;
+    }
 
 
     //create the order for course payment
@@ -77,8 +78,8 @@ public class PaymentService {
                                 .brandName("KsinxAPP language Learning Center")
                                 .landingPage(OrderApplicationContextLandingPage.BILLING)
                                 .userAction(OrderApplicationContextUserAction.PAY_NOW)
-                                .returnUrl(baseUrl + "/payments/return?userId=" + userId + "&courseId=" + request.getCourseId())
-                                .cancelUrl(baseUrl + "/payments/cancel")
+                                .returnUrl("http://localhost:8080/api" + "/payments/return?userId=" + userId + "&courseId=" + request.getCourseId())
+                                .cancelUrl("http://localhost:8080/api" + "/payments/cancel")
                                 .build()
                 ).build();
         //create order in paypal
