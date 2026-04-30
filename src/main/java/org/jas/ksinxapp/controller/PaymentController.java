@@ -2,7 +2,8 @@ package org.jas.ksinxapp.controller;
 
 import com.paypal.sdk.models.Refund;
 import lombok.extern.slf4j.Slf4j;
-import org.jas.ksinxapp.dtos.*;
+import org.jas.ksinxapp.dtos.CreatePaymentRequest;
+import org.jas.ksinxapp.dtos.PaymentResponse;
 import org.jas.ksinxapp.model.SubscriptionModel;
 import org.jas.ksinxapp.payment.PayPalPaymentService;
 import org.jas.ksinxapp.payment.PayPalSubscriptionService;
@@ -12,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
+
 
 @Slf4j
 @RestController
@@ -36,11 +39,8 @@ public class PaymentController {
 
     //create payment order for course enrollment
     @PostMapping("/orders/create")
-    public CompletableFuture<ResponseEntity<PaymentResponse>> createCoursePayment(
-            Authentication auth,
-            @RequestBody CreatePaymentRequest request
-            ){
-
+    public CompletableFuture<ResponseEntity<PaymentResponse>> createCoursePayment(Authentication auth, @RequestBody
+                                                                                  CreatePaymentRequest request){
         Long userId = getUserIdFromAuth(auth);
         log.info("Creating payment order for user: {}", userId);
 
@@ -52,131 +52,125 @@ public class PaymentController {
                 });
     }
 
-    /**
-     *capture order after user approval
-     */
-    @PostMapping("orders/{orderId}/capture")
+    //capture order after user approval
+    @PostMapping("/orders/{orderId}/capture")
     public CompletableFuture<ResponseEntity<PaymentResponse>> captureOrder(
             Authentication auth,
             @PathVariable String orderId
     ){
+        Long userID = getUserIdFromAuth(auth);
+        log.info("Capturing order: {} for user: {}", orderId, userID);
 
-        Long userId = getUserIdFromAuth(auth);
-        log.info("Capturing order: {}, for user: {}", orderId, userId);
-
-        return paymentService.captureOrder(orderId, userId)
+        return paymentService.captureOrder(orderId, userID)
                 .thenApply(ResponseEntity::ok)
                 .exceptionally(ex->{
-                    log.error("Error capturing order", ex);
+                    log.error("Error capturing payment order", ex);
                     return ResponseEntity.badRequest().build();
                 });
-
     }
 
-    /**
-     * Return url after PayPal approval
-     */
+    //return url after PayPal approval
+    @GetMapping("/return")
+    public CompletableFuture<ResponseEntity<String>> handleReturn(
+            @RequestParam String tokenId,
+            @RequestParam Long userId,
+            @RequestParam Long courseId
+    ){
+        log.info("User {} returned from PayPal for course {}", userId, courseId);
+
+        return paymentService.captureOrder(tokenId, userId)
+                .thenApply(paymentResponse -> ResponseEntity.ok("Payment capture successfully"))
+                .exceptionally(ex->ResponseEntity.badRequest().body("Payment capture failed"));
+    }
+
+    //Return cancel url if user cancels payment
     @GetMapping("/cancel")
-    public ResponseEntity<String> handleCancel() {
-        log.info("User cancelled payment");
-        return ResponseEntity.ok("Payment cancelled");
+    public ResponseEntity<String> handleCancel(){
+        log.info("User canceled payment");
+        return ResponseEntity.ok("Payment canceled");
     }
 
-    // ===== REFUNDS =====
+    //====REFUNDS====
 
     /**
-     * Refund a payment (partial or full)
+     *Refund a payment partial or full
      */
     @PostMapping("/refund/{captureId}")
     public CompletableFuture<ResponseEntity<Object>> refundPayment(
             @PathVariable String captureId,
-            @RequestParam(required = false) String amount,
-            @RequestParam(defaultValue = "USD") String currency) {
-
+            @RequestParam String amount,
+            @RequestParam String currency
+    ){
         CompletableFuture<Refund> refundFuture = (amount != null)
-                ? payPalPaymentService.refundPayment(captureId, new java.math.BigDecimal(amount), currency)
+                ? payPalPaymentService.refundPayment(captureId, new BigDecimal(amount), currency)
                 : payPalPaymentService.getFullRefund(captureId);
 
         return refundFuture
                 .thenApply(refund -> ResponseEntity.ok((Object) refund))
-                .exceptionally(ex -> ResponseEntity.badRequest().body("Refund failed: " + ex.getMessage()));
+                .exceptionally(ex->ResponseEntity.badRequest().body("Filed to refund: " + ex.getMessage()));
     }
 
     /**
-     * Get refund status
+     * get refund status
      */
-    @GetMapping("/refund/{refundId}")
-    public CompletableFuture<ResponseEntity<Refund>> getRefund(@PathVariable String refundId) {
+    @GetMapping("/refund/{status}")
+    public CompletableFuture<ResponseEntity<Refund>> getRefund(@PathVariable String refundId){
         return payPalPaymentService.getRefund(refundId)
                 .thenApply(ResponseEntity::ok)
-                .exceptionally(ex -> ResponseEntity.notFound().build());
+                .exceptionally(ex->ResponseEntity.notFound().build());
     }
 
-    // ===== SUBSCRIPTIONS =====
+    //====SUBSCRIPTIONS====
 
     /**
      * Create subscription plan
      */
-    @PostMapping("/subscriptions/plan/create")
-    public CompletableFuture<ResponseEntity<String>> createBillingPlan(
-            @RequestBody SubscriptionRequest planRequest) {
 
-        log.info("Creating billing plan: {}", planRequest.getPlanName());
 
-        return payPalSubscriptionService.createBillingPlan(
-                        planRequest.getPlanName(),
-                        "PROD-KSINX-" + System.currentTimeMillis(),
-                        planRequest.getAmount().toPlainString(),
-                        planRequest.getCurrency(),
-                        planRequest.getInterval()
-                )
-                .thenApply(planId -> ResponseEntity.ok(planId))
-                .exceptionally(ex -> ResponseEntity.badRequest().build());
-    }
-
-    /**
-     * Subscribe to a plan
-     */
-    @PostMapping("/subscriptions/create")
+    @PostMapping("/subscription/create")
     public CompletableFuture<ResponseEntity<SubscriptionModel>> createSubscription(
             Authentication auth,
-            @RequestParam String planId,
+            @RequestParam String planID,
             @RequestParam String amount,
-            @RequestParam(defaultValue = "USD") String currency) {
-
-        Long userId = getUserIdFromAuth(auth);
+            @RequestParam(defaultValue = "USD") String currency
+    ){
+        Long userID = getUserIdFromAuth(auth);
         String userName = auth.getName();
 
         return payPalSubscriptionService.createSubscription(
-                        userId,
-                        planId,
-                        userName,
-                        getEmailFromAuth(auth),
-                        amount,
-                        currency
-                )
+                userID,
+                planID,
+                userName,
+                getEmailFromAuth(auth),
+                amount,
+                currency
+        )
                 .thenApply(ResponseEntity::ok)
-                .exceptionally(ex -> ResponseEntity.badRequest().build());
+                .exceptionally(ex->ResponseEntity.badRequest().build());
     }
 
+
     /**
-     * Cancel subscription
+     *Cancel subscription
      */
-    @PostMapping("/subscriptions/{subscriptionId}/cancel")
+    @PostMapping("/subscription/{subscriptionID}/cancel")
     public CompletableFuture<ResponseEntity<String>> cancelSubscription(
-            @PathVariable String subscriptionId,
-            @RequestParam(defaultValue = "User requested cancellation") String reason) {
-
-        return payPalSubscriptionService.cancelSubscription(subscriptionId, reason)
-                .thenApply(v -> ResponseEntity.ok("Subscription cancelled"))
-                .exceptionally(ex -> ResponseEntity.badRequest().body("Cancellation failed"));
+            @PathVariable String subscriptionID,
+            @RequestParam(defaultValue = "User requested cancellation") String reason
+    )
+    {
+        return payPalSubscriptionService.cancelSubscription(subscriptionID, reason)
+                .thenApply(v->ResponseEntity.ok("Subscription cancelled"))
+                .exceptionally(ex->ResponseEntity.badRequest().body("Cancellation failed"));
     }
 
-    // ===== WEBHOOKS =====
+
+    //====WEBHOOKS====
 
     /**
-     * PayPal webhook endpoint
+     *
      */
+
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(
             @RequestBody String body,
@@ -185,8 +179,8 @@ public class PaymentController {
             @RequestHeader("PayPal-Cert-Url") String certUrl,
             @RequestHeader("PayPal-Auth-Algo") String authAlgo,
             @RequestHeader("PayPal-Transmission-Sig") String transmissionSig,
-            @RequestHeader("PayPal-Event-Type") String eventType) {
-
+            @RequestHeader("PayPal-Event-Type") String eventType
+    ){
         try {
             // TODO: Verify webhook signature in production
             payPalWebHookService.handleWebHookEvent(body, eventType);
@@ -199,14 +193,12 @@ public class PaymentController {
     }
 
 
-
-    //helper methods
-    private Long getUserIdFromAuth(Authentication auth) {
+    //====HELPER METHODS====
+    private Long getUserIdFromAuth(Authentication auth){
         return Long.parseLong(auth.getPrincipal().toString());
     }
 
-    private String getEmailFromAuth(Authentication auth) {
-        // Adjust based on your user/principal implementation
+    private String getEmailFromAuth(Authentication auth){
         return auth.getName();
     }
 
