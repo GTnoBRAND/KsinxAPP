@@ -1,8 +1,6 @@
 package org.jas.ksinxapp.service;
 
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.dtos.CourseCreateRequest;
 import org.jas.ksinxapp.dtos.CourseResponse;
 import org.jas.ksinxapp.mappers.CourseMapper;
@@ -11,7 +9,6 @@ import org.jas.ksinxapp.repo.CourseRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -79,7 +76,13 @@ public class CourseService {
     }
 
     @Transactional
-    public void deleteById(Long id){
-        courseRepo.deleteById(id);
+    public CourseResponse deleteById(Long id){
+        Course course = courseRepo.findById(id)
+                .orElseThrow(()->new RuntimeException("Course not found"));
+
+        course.setActive(false);
+        courseRepo.save(course);
+
+        return courseMapper.toResponseDto(course);
     }
 }

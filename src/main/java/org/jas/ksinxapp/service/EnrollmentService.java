@@ -44,6 +44,10 @@ public class EnrollmentService {
         Course course = courseRepo.findById(request.courseId())
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course Not Found"));
 
+        if(!course.isActive()){
+            throw new RuntimeException("Course is not active anymore");
+        }
+
         //prevent duplicate active enrollments(business logic)
         if (enrollmentRepo.existsByStudentIdAndCourseIdAndIsActiveTrue(student.getId(), course.getId())){
             throw new RuntimeException("Student is already enrolled to this course!");

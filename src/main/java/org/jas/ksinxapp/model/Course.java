@@ -22,15 +22,18 @@ public class Course {
     @OneToMany(mappedBy = "course",cascade = CascadeType.ALL)
     private List<Modules> modules;
 
+    private boolean isActive = true;
+
     public Course() {
     }
 
-    public Course(Long id, String title, String description, BigDecimal price, List<Modules> modules) {
+    public Course(Long id, String title, String description, BigDecimal price, List<Modules> modules, boolean isActive) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.price = price;
         this.modules = modules;
+        this.isActive = isActive;
     }
 
     public Long getId() {
@@ -73,6 +76,14 @@ public class Course {
         this.modules = modules;
     }
 
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
     @Override
     public String toString() {
         return "Course{" +
@@ -81,6 +92,7 @@ public class Course {
                 ", description='" + description + '\'' +
                 ", price=" + price +
                 ", modules=" + modules +
+                ", isActive=" + isActive +
                 '}';
     }
 }
