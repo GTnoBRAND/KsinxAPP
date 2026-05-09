@@ -31,4 +31,12 @@ public class ModulesController {
         List<ModulesResponse> response = modulesService.getModulesForCourse(courseId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @PutMapping("/{moduleId}/status")
+    public ResponseEntity<ModulesResponse> updateModulesStatus(
+            @PathVariable Long moduleId,
+            @RequestParam boolean isActive
+    ){
+        return ResponseEntity.ok(modulesService.updateModuleStatus(moduleId, isActive));
+    }
 }

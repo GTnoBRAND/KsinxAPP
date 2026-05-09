@@ -1,7 +1,11 @@
 package org.jas.ksinxapp.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "modules")
 public class Modules {
@@ -21,6 +25,8 @@ public class Modules {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    private boolean isActive = true;
+
     public Modules() {
     }
 
@@ -29,46 +35,6 @@ public class Modules {
         this.title = title;
         this.sequenceOrder = sequenceOrder;
         this.videoUrl = videoUrl;
-        this.course = course;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public Integer getSequenceOrder() {
-        return sequenceOrder;
-    }
-
-    public void setSequenceOrder(Integer sequenceOrder) {
-        this.sequenceOrder = sequenceOrder;
-    }
-
-    public String getVideoUrl() {
-        return videoUrl;
-    }
-
-    public void setVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
-    }
-
-    public Course getCourse() {
-        return course;
-    }
-
-    public void setCourse(Course course) {
         this.course = course;
     }
 

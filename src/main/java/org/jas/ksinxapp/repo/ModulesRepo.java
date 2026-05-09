@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface ModulesRepo extends JpaRepository<Modules,Long> {
     //fetch all the lessons for the course ion the correct order!
-    List<Modules> findByCourseIdOrderBySequenceOrderAsc(Long courseId);
+    List<Modules> findByCourseIdAndIsActiveTrueOrderBySequenceOrderAsc(Long courseId);
 }

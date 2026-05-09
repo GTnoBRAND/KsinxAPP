@@ -54,12 +54,22 @@ public class ModulesService {
         }
 
         //custom repo method to order in asc
-        List<Modules> modules = modulesRepo.findByCourseIdOrderBySequenceOrderAsc(courseId);
+        List<Modules> modules = modulesRepo.findByCourseIdAndIsActiveTrueOrderBySequenceOrderAsc(courseId);
 
         //map them to response dto
         return modules.stream()
                 .map(modulesMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ModulesResponse updateModuleStatus(Long moduleId, boolean isActive){
+        Modules modules = modulesRepo.findById(moduleId)
+                .orElseThrow(()->new RuntimeException("Module not found"));
+
+        modules.setActive(isActive);
+        modulesRepo.save(modules);
+        return modulesMapper.toResponse(modules);
     }
 
 }
