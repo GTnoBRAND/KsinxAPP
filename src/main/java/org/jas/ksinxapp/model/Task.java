@@ -1,10 +1,14 @@
 package org.jas.ksinxapp.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 
+@Setter
+@Getter
 @Entity
 @Table(name = "task")
 public class Task {
@@ -34,54 +38,6 @@ public class Task {
         this.instructions = instructions;
         this.maxScore = maxScore;
         this.dueDate = dueDate;
-        this.module = module;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getInstructions() {
-        return instructions;
-    }
-
-    public void setInstructions(String instructions) {
-        this.instructions = instructions;
-    }
-
-    public Integer getMaxScore() {
-        return maxScore;
-    }
-
-    public void setMaxScore(Integer maxScore) {
-        this.maxScore = maxScore;
-    }
-
-    public LocalDateTime getDueDate() {
-        return dueDate;
-    }
-
-    public void setDueDate(LocalDateTime dueDate) {
-        this.dueDate = dueDate;
-    }
-
-    public Modules getModule() {
-        return module;
-    }
-
-    public void setModule(Modules module) {
         this.module = module;
     }
 

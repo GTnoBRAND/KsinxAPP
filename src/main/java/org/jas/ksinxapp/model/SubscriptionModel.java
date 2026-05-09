@@ -6,6 +6,8 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "subscriptions")
 @Builder
@@ -53,99 +55,4 @@ public class SubscriptionModel {
         this.version = version;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getPaypalSubscriptionId() {
-        return paypalSubscriptionId;
-    }
-
-    public void setPaypalSubscriptionId(String paypalSubscriptionId) {
-        this.paypalSubscriptionId = paypalSubscriptionId;
-    }
-
-    public String getPaypalPlanId() {
-        return paypalPlanId;
-    }
-
-    public void setPaypalPlanId(String paypalPlanId) {
-        this.paypalPlanId = paypalPlanId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public SubscriptionStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(SubscriptionStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getNextBillingDate() {
-        return nextBillingDate;
-    }
-
-    public void setNextBillingDate(LocalDateTime nextBillingDate) {
-        this.nextBillingDate = nextBillingDate;
-    }
-
-    public LocalDateTime getCanceledAt() {
-        return canceledAt;
-    }
-
-    public void setCanceledAt(LocalDateTime canceledAt) {
-        this.canceledAt = canceledAt;
-    }
-
-    public String getCancellationReason() {
-        return cancellationReason;
-    }
-
-    public void setCancellationReason(String cancellationReason) {
-        this.cancellationReason = cancellationReason;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
 }

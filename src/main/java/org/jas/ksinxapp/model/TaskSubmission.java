@@ -1,12 +1,12 @@
 package org.jas.ksinxapp.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "submission")
 public class TaskSubmission {
@@ -48,62 +48,6 @@ public class TaskSubmission {
         this.submittedAt = submittedAt;
         this.fileUrl = fileUrl;
         this.score = score;
-        this.teacherFeedback = teacherFeedback;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Task getTask() {
-        return task;
-    }
-
-    public void setTask(Task task) {
-        this.task = task;
-    }
-
-    public User getStudent() {
-        return student;
-    }
-
-    public void setStudent(User student) {
-        this.student = student;
-    }
-
-    public LocalDateTime getSubmittedAt() {
-        return submittedAt;
-    }
-
-    public void setSubmittedAt(LocalDateTime submittedAt) {
-        this.submittedAt = submittedAt;
-    }
-
-    public String getFileUrl() {
-        return fileUrl;
-    }
-
-    public void setFileUrl(String fileUrl) {
-        this.fileUrl = fileUrl;
-    }
-
-    public Integer getScore() {
-        return score;
-    }
-
-    public void setScore(Integer score) {
-        this.score = score;
-    }
-
-    public String getTeacherFeedback() {
-        return teacherFeedback;
-    }
-
-    public void setTeacherFeedback(String teacherFeedback) {
         this.teacherFeedback = teacherFeedback;
     }
 
