@@ -3,6 +3,7 @@ package org.jas.ksinxapp.controller;
 import jakarta.validation.Valid;
 import org.jas.ksinxapp.dtos.CourseCreateRequest;
 import org.jas.ksinxapp.dtos.CourseResponse;
+import org.jas.ksinxapp.model.Course;
 import org.jas.ksinxapp.service.CourseService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,7 +33,7 @@ public class CourseController {
         return ResponseEntity.ok(service.getAllResponse(pageNo, pageSize, sortBy, sortDir));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/find/{id}")
     public ResponseEntity<CourseResponse> findById(@PathVariable Long id){
         return ResponseEntity.ok(service.findById(id));
     }
@@ -49,8 +50,9 @@ public class CourseController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public void delete(@PathVariable @Valid Long id){
-        service.deleteById(id);
+    public ResponseEntity<CourseResponse> delete(@PathVariable @Valid Long id,
+            @RequestParam boolean isActive){
+
+        return ResponseEntity.ok(service.deleteById(id, isActive));
     }
 }
