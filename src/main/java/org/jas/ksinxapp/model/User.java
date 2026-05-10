@@ -38,7 +38,8 @@ public class User{
 
     public enum  Role {
         ADMIN,
-        USER        //you and any other teacher
+        STUDENT,
+        TEACHER
     }
 
 

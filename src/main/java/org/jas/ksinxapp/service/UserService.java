@@ -1,6 +1,8 @@
 package org.jas.ksinxapp.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jas.ksinxapp.dtos.LoginRequest;
 import org.jas.ksinxapp.dtos.LoginResponse;
 import org.jas.ksinxapp.dtos.StudentRegistrationRequest;
@@ -25,6 +27,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepo userRepo;
@@ -33,15 +37,6 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder  passwordEncoder;
     private final JwtService  jwtService;
-
-    public UserService(UserRepo userRepo, UserMapper userMapper, LoginMapper loginMapper ,   AuthenticationManager authenticationManager,  PasswordEncoder passwordEncoder,  JwtService jwtService) {
-        this.userRepo = userRepo;
-        this.userMapper = userMapper;
-        this.loginMapper = loginMapper;
-        this.authenticationManager = authenticationManager;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-    }
 
     @Transactional
     public StudentResponse registerStudent(StudentRegistrationRequest request) {
@@ -55,7 +50,7 @@ public class UserService {
         User newUser = userMapper.toEntity(request);
 
         //set the secure fields manually
-        newUser.setRole(User.Role.USER);
+        newUser.setRole(User.Role.STUDENT);
 
         //replace with Bcrypt later
         newUser.setPassword(passwordEncoder.encode(request.password()));
@@ -85,7 +80,7 @@ public class UserService {
         //GENERATE THE TOKEN HERE
         // Use the username (fullName) from the principal to create the ticket
         assert principal != null;
-        String token = jwtService.generateToken(principal.getUsername());
+        String token = jwtService.generateToken(principal.getUsername(), principal.getUser().getRole(), principal.getUser().getEmail());
 
 
         //extract the actual entity from your principal
@@ -126,5 +121,15 @@ public class UserService {
                 .stream()
                 .map(userMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public User getStudentByFullName(String fullName){
+        User user = userRepo.findByFullName(fullName);
+        if(user == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "student not found " + fullName);
+        }
+
+        return user;
     }
 }
