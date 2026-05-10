@@ -2,6 +2,7 @@ package org.jas.ksinxapp.model;
 
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @Table(name = "enrollment")
+@Builder
 public class Enrollment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

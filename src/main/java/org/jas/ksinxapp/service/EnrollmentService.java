@@ -22,19 +22,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class EnrollmentService {
 
     private final EnrollmentRepo enrollmentRepo;
     private final CourseRepo courseRepo;
     private final UserRepo userRepo;
     private final EnrollmentMapper  enrollmentMapper;
-
-    public EnrollmentService(EnrollmentRepo enrollmentRepo, CourseRepo courseRepo, UserRepo userRepo, EnrollmentMapper enrollmentMapper) {
-        this.enrollmentRepo = enrollmentRepo;
-        this.courseRepo = courseRepo;
-        this.userRepo = userRepo;
-        this.enrollmentMapper = enrollmentMapper;
-    }
 
     @Transactional
     public EnrollmentResponse enrollStudent(EnrollmentRequest request){
@@ -54,18 +48,11 @@ public class EnrollmentService {
         }
 
         //manually assemble the new enrollment entity
-        Enrollment enrollment = new Enrollment();
-        enrollment.setStudent(student);
-        enrollment.setCourse(course);
-        enrollment.setEnrollmentDate(LocalDateTime.now());
-        enrollment.setActive(true);
-
-//        Enrollment enrollment = Enrollment.builder()
-//                .student(student)
-//                .course(course)
-//                .enrollmentDate(LocalDateTime.now())
-//                .isActive(true)
-//                .build();
+        Enrollment enrollment = Enrollment.builder()
+                .student(student)
+                .course(course)
+                .isActive(true)
+                .build();
 
         //save to postgresql
         Enrollment savedEnrollment = enrollmentRepo.save(enrollment);
