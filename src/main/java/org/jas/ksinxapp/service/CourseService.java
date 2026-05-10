@@ -76,11 +76,11 @@ public class CourseService {
     }
 
     @Transactional
-    public CourseResponse deleteById(Long id){
+    public CourseResponse deleteById(Long id, boolean isActive){
         Course course = courseRepo.findById(id)
                 .orElseThrow(()->new RuntimeException("Course not found"));
 
-        course.setActive(false);
+        course.setActive(isActive);
         courseRepo.save(course);
 
         return courseMapper.toResponseDto(course);
