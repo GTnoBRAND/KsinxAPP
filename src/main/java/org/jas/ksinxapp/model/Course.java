@@ -27,6 +27,9 @@ public class Course {
     @OneToMany(mappedBy = "course",cascade = CascadeType.ALL)
     private List<Modules> modules;
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    private List<Enrollment> enrollments;
+
     private boolean isActive = true;
 
     public Course() {
