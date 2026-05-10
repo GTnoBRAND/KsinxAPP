@@ -1,11 +1,14 @@
 package org.jas.ksinxapp.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.dtos.LoginRequest;
 import org.jas.ksinxapp.dtos.LoginResponse;
 import org.jas.ksinxapp.dtos.StudentRegistrationRequest;
 import org.jas.ksinxapp.dtos.StudentResponse;
 import org.jas.ksinxapp.jwt.JwtService;
+import org.jas.ksinxapp.model.User;
+import org.jas.ksinxapp.repo.UserRepo;
 import org.jas.ksinxapp.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +22,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
-
-    public UserController(UserService userService, JwtService jwtService) {
-        this.userService = userService;
-        this.jwtService = jwtService;
-    }
+    private final UserRepo repo;
 
     //post request to register the user
     @PostMapping("/register")
@@ -71,8 +71,16 @@ public class UserController {
         // Spring identifies the user from the Google session
         String fullName = authentication.getName();
 
+        //get the user from db to get role and email
+        User user = userService.getStudentByFullName(fullName);
+        if(user == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
         //generate the token
-        String token = jwtService.generateToken(fullName);
+        String token = jwtService.generateToken(fullName,
+                user.getRole(),
+                user.getEmail());
 
         //return it as a simple json
         Map<String, Object> response = new HashMap<>();
