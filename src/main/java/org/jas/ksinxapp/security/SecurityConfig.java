@@ -1,9 +1,12 @@
 package org.jas.ksinxapp.security;
 
+import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.jwt.AuthEntryPointJwt;
 import org.jas.ksinxapp.jwt.AuthTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,16 +23,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity //allows to @PreAuthorize on controller
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final AuthEntryPointJwt authEntryPointJwt;
     private final AuthTokenFilter authTokenFilter;
 
-    public SecurityConfig(AuthEntryPointJwt authEntryPointJwt,  AuthTokenFilter authTokenFilter)
-    {
-    this.authEntryPointJwt = authEntryPointJwt;
-    this.authTokenFilter = authTokenFilter;
-    }
 
     // Expose the PasswordEncoder as a Bean.
     // Spring Security will automatically pair this with your @Service MyUserDetailService
@@ -42,6 +41,12 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+    @Bean
+    public RoleHierarchy roleHierarchy(){
+        return RoleHierarchyImpl.fromHierarchy(
+                "ROLE_ADMIN > ROLE_TEACHER > ROLE_STUDENT"
+        );
     }
 
     @Bean
@@ -56,12 +61,15 @@ public class SecurityConfig {
 
                         .requestMatchers("/", "/register.html").permitAll()
                         // Publicly accessible paths
-                        .requestMatchers("/api/course/all","/api/v1/users/register",
-                                "/api/v1/users/login").permitAll()
+                        .requestMatchers("/api/course/all","/api/course/find/**","/api/v1/users/register",
+                                "/api/v1/users/login", "/api/v1/modules/course/**").permitAll()
 
                         // Role-based restrictions
-                        .requestMatchers("/api/v1/users/delete/").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/v1/users/update/", "/api/v1/users/all", "/api/v1/users/auth/token").hasAuthority("ROLE_USER")
+                        .requestMatchers("/api/v1/users/delete/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/users/update/**", "/api/v1/users/auth/token",
+                                "/api/v1/submission/submit").hasRole("STUDENT")
+                        .requestMatchers("/api/course/update/**","/api/course/add","api/course/delete/**", "/api/v1/tasks",
+                                "/api/v1/submission/**","/api/v1/modules/update/**").hasRole("TEACHER")
 
                         .anyRequest().authenticated()
                 )
