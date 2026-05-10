@@ -20,7 +20,7 @@ public class ModulesController {
         this.modulesService = modulesService;
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<ModulesResponse> createModule(@Valid @RequestBody ModulesRequest request) {
         ModulesResponse response = modulesService.createModule(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -32,7 +32,7 @@ public class ModulesController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PutMapping("/{moduleId}/status")
+    @PutMapping("/update/{moduleId}/status")
     public ResponseEntity<ModulesResponse> updateModulesStatus(
             @PathVariable Long moduleId,
             @RequestParam boolean isActive

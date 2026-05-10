@@ -4,8 +4,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.Bytes;
+import org.jas.ksinxapp.model.User;
 import org.jas.ksinxapp.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,13 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class JwtService {
-
-    private final UserPrincipal userPrincipal;
-
-    public JwtService(UserPrincipal userPrincipal) {
-        this.userPrincipal = userPrincipal;
-    }
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -41,8 +39,10 @@ public class JwtService {
     }
 
 
-    public String generateToken(String fullName){
+    public String generateToken(String fullName, User.Role role, String email){
         Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        claims.put("email", email);
         return Jwts.builder()
                 .claims(claims)
                 .subject(fullName)
@@ -55,7 +55,9 @@ public class JwtService {
 
     //to get the fullName from jwt token
     public String getUserFromToken(String token){
-        return Jwts.parser().verifyWith(key).build()
+        return Jwts.parser().
+                verifyWith(key)
+                .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
@@ -64,10 +66,13 @@ public class JwtService {
     //validate
     public boolean validateJwtToken(String token){
         try{
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         }catch(Exception e){
-            System.out.println("Jwt validation error: "+e.getMessage());
+            log.error("Jwt validation error: {}", e.getMessage());
         }
         return false;
     }
