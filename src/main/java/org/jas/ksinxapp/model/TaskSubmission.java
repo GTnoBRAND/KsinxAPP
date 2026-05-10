@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @Table(name = "submission")
+@Builder
 public class TaskSubmission {
 
     @Id

@@ -1,6 +1,7 @@
 package org.jas.ksinxapp.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.dtos.TaskRequest;
 import org.jas.ksinxapp.dtos.TaskResponse;
 import org.jas.ksinxapp.service.TaskService;
@@ -12,13 +13,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
+@RequiredArgsConstructor
 public class TaskController {
 
     private final TaskService taskService;
 
-    public TaskController(TaskService taskService) {
-        this.taskService = taskService;
-    }
 
     @PostMapping
     public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest taskRequest) {

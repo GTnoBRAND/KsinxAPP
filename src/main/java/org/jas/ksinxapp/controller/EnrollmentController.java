@@ -13,13 +13,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/vi/enrollments")
+@RequiredArgsConstructor
 public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
-    public EnrollmentController(EnrollmentService enrollmentService) {
-        this.enrollmentService = enrollmentService;
-    }
 
     @PostMapping
     public ResponseEntity<EnrollmentResponse> enrollStudent(@Valid @RequestBody EnrollmentRequest request) {

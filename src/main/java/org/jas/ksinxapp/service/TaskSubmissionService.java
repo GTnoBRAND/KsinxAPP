@@ -1,5 +1,6 @@
 package org.jas.ksinxapp.service;
 
+import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.dtos.TaskSubmissionRequest;
 import org.jas.ksinxapp.dtos.TaskSubmissionResponse;
 import org.jas.ksinxapp.mappers.TaskSubmissionMapper;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class TaskSubmissionService {
 
     private final TaskSubmissionRepo taskSubmissionRepo;
@@ -24,12 +26,6 @@ public class TaskSubmissionService {
     private final UserRepo userRepo;
     private final TaskSubmissionMapper taskSubmissionMapper;
 
-    public TaskSubmissionService(TaskSubmissionRepo taskSubmissionRepo, TaskRepo taskRepo, UserRepo userRepo, TaskSubmissionMapper taskSubmissionMapper) {
-        this.taskSubmissionRepo = taskSubmissionRepo;
-        this.taskRepo = taskRepo;
-        this.userRepo = userRepo;
-        this.taskSubmissionMapper = taskSubmissionMapper;
-    }
 
     //a student uploads a task
     @Transactional
@@ -41,11 +37,11 @@ public class TaskSubmissionService {
                 .orElseThrow(()->new RuntimeException("Task id not found"));
 
         //we build the entity manually here as we need actual User and Task objects
-        TaskSubmission taskSubmission = new TaskSubmission();
-        taskSubmission.setStudent(student);
-        taskSubmission.setTask(task);
-        taskSubmission.setFileUrl(request.fileUrl());
-        taskSubmission.setSubmittedAt(LocalDateTime.now());
+        TaskSubmission taskSubmission = TaskSubmission.builder()
+                .task(task)
+                .student(student)
+                .fileUrl(request.fileUrl())
+                .build();
 
         TaskSubmission savedSubmission = taskSubmissionRepo.save(taskSubmission);
         return taskSubmissionMapper.toResponse(savedSubmission);
@@ -56,6 +52,9 @@ public class TaskSubmissionService {
     public TaskSubmissionResponse gradeSubmission(Long submissionId, Integer score, String feedback){
         TaskSubmission submission = taskSubmissionRepo.findById(submissionId)
                 .orElseThrow(()->new RuntimeException("Submission id not found"));
+        if(submission.getScore()!=null){
+            throw new RuntimeException("Submission already graded!");
+        }
 
         submission.setScore(score);
         submission.setTeacherFeedback(feedback);

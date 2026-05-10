@@ -1,6 +1,7 @@
 package org.jas.ksinxapp.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.dtos.TaskSubmissionRequest;
 import org.jas.ksinxapp.dtos.TaskSubmissionResponse;
 import org.jas.ksinxapp.service.TaskSubmissionService;
@@ -12,15 +13,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/submission")
+@RequiredArgsConstructor
 public class TaskSubmissionController {
 
     private final TaskSubmissionService service;
 
-    public TaskSubmissionController(TaskSubmissionService service) {
-        this.service = service;
-    }
-
-    @PostMapping
+    @PostMapping("/submit")
     public ResponseEntity<TaskSubmissionResponse> submitTask(@Valid @RequestBody TaskSubmissionRequest taskSubmissionRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.submitTask(taskSubmissionRequest));
     }
