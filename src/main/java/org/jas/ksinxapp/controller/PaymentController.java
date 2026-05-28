@@ -1,6 +1,7 @@
 package org.jas.ksinxapp.controller;
 
 import com.paypal.sdk.models.Refund;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jas.ksinxapp.dtos.CreatePaymentRequest;
 import org.jas.ksinxapp.dtos.PaymentResponse;
@@ -20,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @RestController
 @RequestMapping("/api/payments")
+@RequiredArgsConstructor
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -27,12 +29,6 @@ public class PaymentController {
     private final PayPalWebHookService payPalWebHookService;
     private final PayPalSubscriptionService payPalSubscriptionService;
 
-    public PaymentController(PaymentService paymentService, PayPalPaymentService payPalPaymentService, PayPalWebHookService payPalWebHookService, PayPalSubscriptionService payPalSubscriptionService) {
-        this.paymentService = paymentService;
-        this.payPalPaymentService = payPalPaymentService;
-        this.payPalWebHookService = payPalWebHookService;
-        this.payPalSubscriptionService = payPalSubscriptionService;
-    }
 
 
     // --course payments--

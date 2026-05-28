@@ -14,11 +14,14 @@ public interface CourseMapper {
     //we ignore id and modules cause it is brand new course
     @Mapping(target = "id",  ignore = true)
     @Mapping(target = "modules",  ignore = true)
+    @Mapping(target = "imageUrl",  ignore = true)
+    @Mapping(target = "videoUrl",  ignore = true)
     Course toEntity(CourseCreateRequest request);
 
 
     //map a saved entity back to response dto for frontend
-    @Mapping(target = "totalModules", expression = "java(course.getModules() != null ? course.getModules().size() : 0)")
+    @Mapping(target = "totalModules",
+            expression = "java(course.getModules() != null ? course.getModules().size() : 0)")
     @Named("useThisOne")
     CourseResponse toResponse(Course course);
 

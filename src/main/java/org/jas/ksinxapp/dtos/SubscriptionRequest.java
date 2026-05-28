@@ -1,5 +1,7 @@
 package org.jas.ksinxapp.dtos;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,5 +19,12 @@ public class SubscriptionRequest {
     private String planDescription;
     private BigDecimal amount;
     private String currency;
-    private String interval;    //month, year
+    @Enumerated(EnumType.STRING)
+    private BillingInterval interval;
+
+
+    public enum BillingInterval{
+        MONTH,
+        YEAR
+    }
 }

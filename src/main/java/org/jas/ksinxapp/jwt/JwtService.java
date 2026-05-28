@@ -39,13 +39,13 @@ public class JwtService {
     }
 
 
-    public String generateToken(String fullName, User.Role role, String email){
+    public String generateToken(User.Role role, String email){
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
         claims.put("email", email);
         return Jwts.builder()
                 .claims(claims)
-                .subject(fullName)
+                .subject(email)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + (jwtExpiration * 1000)))
                 .signWith(key)
@@ -53,7 +53,7 @@ public class JwtService {
     }
 
 
-    //to get the fullName from jwt token
+    //to get the email from jwt token
     public String getUserFromToken(String token){
         return Jwts.parser().
                 verifyWith(key)

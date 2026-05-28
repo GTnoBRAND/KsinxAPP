@@ -28,6 +28,11 @@ public class Task {
     @JoinColumn(name = "module_id", nullable = false)
     private Modules module;
 
+    @PrePersist
+    public void onCreate(){
+        this.dueDate = LocalDateTime.now();
+    }
+
 
     public Task() {
     }

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.dtos.LoginRequest;
 import org.jas.ksinxapp.dtos.LoginResponse;
+import org.jas.ksinxapp.dtos.RoleUpdateRequest;
 import org.jas.ksinxapp.dtos.StudentRegistrationRequest;
 import org.jas.ksinxapp.dtos.StudentResponse;
 import org.jas.ksinxapp.jwt.JwtService;
@@ -45,9 +46,15 @@ public class UserController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<StudentResponse> deleteStudent(@PathVariable Long id){
         return ResponseEntity.ok(userService.deleteStudentById(id));
+    }
+
+    //admin-only: change a user's role (ADMIN, TEACHER, STUDENT)
+    @PutMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StudentResponse> updateRole(@PathVariable Long id, @Valid @RequestBody RoleUpdateRequest request){
+        return ResponseEntity.ok(userService.updateUserRole(id, request.role()));
     }
 
     @GetMapping("/all")
@@ -58,7 +65,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request){
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request){
         return ResponseEntity.ok(userService.login(request));
     }
 
@@ -78,7 +85,7 @@ public class UserController {
         }
 
         //generate the token
-        String token = jwtService.generateToken(fullName,
+        String token = jwtService.generateToken(
                 user.getRole(),
                 user.getEmail());
 

@@ -20,6 +20,10 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/upload/**")
                 .addResourceLocations("file:"+uploadPath + "/");
+
+        //FileStorageService returns /uploads/ URLs, so serve them too
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:"+uploadPath + "/");
     }
 
 }

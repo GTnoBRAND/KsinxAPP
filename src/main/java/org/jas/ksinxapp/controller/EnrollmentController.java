@@ -2,6 +2,7 @@ package org.jas.ksinxapp.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.jas.ksinxapp.dtos.CourseProgressResponse;
 import org.jas.ksinxapp.dtos.EnrollmentRequest;
 import org.jas.ksinxapp.dtos.EnrollmentResponse;
 import org.jas.ksinxapp.service.EnrollmentService;
@@ -30,5 +31,15 @@ public class EnrollmentController {
     @GetMapping("/all")
     public ResponseEntity<List<EnrollmentResponse>> getAllEnrollments() {
         return ResponseEntity.ok(enrollmentService.getAllEnrollments());
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<EnrollmentResponse>> getMyEnrollments() {
+        return ResponseEntity.ok(enrollmentService.getMyEnrollments());
+    }
+
+    @GetMapping("/progress")
+    public ResponseEntity<CourseProgressResponse> getCourseProgress(@RequestParam @Valid Long studentId, @RequestParam Long courseId){
+        return ResponseEntity.ok(enrollmentService.getCourseProgress(studentId, courseId));
     }
 }

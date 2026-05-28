@@ -23,6 +23,12 @@ public class Course {
     @Column(nullable = false)
     private BigDecimal price;
 
+    //cover photo shown on the course card
+    private String imageUrl;
+
+    //short teaser/spoiler video
+    private String videoUrl;
+
     //a course has many curriculums, modules
     @OneToMany(mappedBy = "course",cascade = CascadeType.ALL)
     private List<Modules> modules;
@@ -30,12 +36,12 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
     private List<Enrollment> enrollments;
 
-    private boolean isActive = true;
+    private Boolean isActive = true;
 
     public Course() {
     }
 
-    public Course(Long id, String title, String description, BigDecimal price, List<Modules> modules, boolean isActive) {
+    public Course(Long id, String title, String description, BigDecimal price, List<Modules> modules, Boolean isActive) {
         this.id = id;
         this.title = title;
         this.description = description;

@@ -17,15 +17,12 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class PayPalPaymentService {
 
     private final PaypalServerSdkClient paypalServerSdkClient;
     private final PaymentTransactionRepo paymentTransactionRepo;
 
-    public PayPalPaymentService(PaypalServerSdkClient paypalServerSdkClient, PaymentTransactionRepo paymentTransactionRepo) {
-        this.paypalServerSdkClient = paypalServerSdkClient;
-        this.paymentTransactionRepo = paymentTransactionRepo;
-    }
 
     //gte captured payment details
     public CompletableFuture<CapturedPayment> getCapturedPaymnet(String captureId){

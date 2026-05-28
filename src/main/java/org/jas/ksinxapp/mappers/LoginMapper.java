@@ -16,6 +16,7 @@ public interface LoginMapper {
     @Mapping(target = "enrollments", ignore = true)
     User entity(LoginRequest loginRequest);
 
+    @Mapping(target = "id", source = "user.id")
     @Mapping(target = "role", source = "user.role")
     LoginResponse loginResponse(User user, String token);
 }

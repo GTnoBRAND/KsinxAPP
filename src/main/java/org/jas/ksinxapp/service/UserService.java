@@ -68,7 +68,7 @@ public class UserService {
         //triggers userDetailService and compares passwords using encoder
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.fullName(),
+                        request.email(),
                         request.password()
                 )
         );
@@ -80,7 +80,7 @@ public class UserService {
         //GENERATE THE TOKEN HERE
         // Use the username (fullName) from the principal to create the ticket
         assert principal != null;
-        String token = jwtService.generateToken(principal.getUsername(), principal.getUser().getRole(), principal.getUser().getEmail());
+        String token = jwtService.generateToken(principal.getUser().getRole(), principal.getUser().getEmail());
 
 
         //extract the actual entity from your principal
@@ -131,5 +131,19 @@ public class UserService {
         }
 
         return user;
+    }
+
+    @Transactional
+    public StudentResponse updateUserRole(Long id, User.Role role) {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getRole() == User.Role.ADMIN && role != User.Role.ADMIN
+                && userRepo.countByRole(User.Role.ADMIN) <= 1) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot demote the last remaining admin");
+        }
+
+        user.setRole(role);
+        return userMapper.toResponse(user);
     }
 }

@@ -3,12 +3,13 @@ package org.jas.ksinxapp.security;
 import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.jwt.AuthEntryPointJwt;
 import org.jas.ksinxapp.jwt.AuthTokenFilter;
+import org.jas.ksinxapp.oauth2.OAuth2SuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,17 +23,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity //allows to @PreAuthorize on controller
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final AuthEntryPointJwt authEntryPointJwt;
     private final AuthTokenFilter authTokenFilter;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
-
-    // Expose the PasswordEncoder as a Bean.
-    // Spring Security will automatically pair this with your @Service MyUserDetailService
-    // to instantly create a working DaoAuthenticationProvider.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
@@ -42,35 +40,44 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
     @Bean
-    public RoleHierarchy roleHierarchy(){
-        return RoleHierarchyImpl.fromHierarchy(
-                "ROLE_ADMIN > ROLE_TEACHER > ROLE_STUDENT"
-        );
+    public RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.fromHierarchy("ROLE_ADMIN > ROLE_TEACHER > ROLE_STUDENT");
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+                // Sessions needed for the OAuth2 state parameter exchange; JWT endpoints are stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .oauth2Login(Customizer.withDefaults())
-                .exceptionHandling(e->
-                        e.authenticationEntryPoint(authEntryPointJwt))
+                .oauth2Login(oauth -> oauth
+                        .successHandler(oAuth2SuccessHandler)
+                )
+                .exceptionHandling(e -> e.authenticationEntryPoint(authEntryPointJwt))
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers("/", "/register.html").permitAll()
-                        // Publicly accessible paths
-                        .requestMatchers("/api/course/all","/api/course/find/**","/api/v1/users/register",
-                                "/api/v1/users/login", "/api/v1/modules/course/**").permitAll()
-
-                        // Role-based restrictions
+                        // Static frontend
+                        .requestMatchers("/", "/*.html", "/css/**", "/js/**", "/img/**").permitAll()
+                        // OAuth2 authorization redirect (Spring Security's own endpoint)
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        // Public API
+                        .requestMatchers(
+                                "/api/course/all", "/api/course/find/**",
+                                "/api/v1/users/register", "/api/v1/users/login",
+                                "/api/v1/modules/course/**"
+                        ).permitAll()
+                        // Role-based
                         .requestMatchers("/api/v1/users/delete/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/users/update/**", "/api/v1/users/auth/token",
-                                "/api/v1/submission/submit").hasRole("STUDENT")
-                        .requestMatchers("/api/course/update/**","/api/course/add","api/course/delete/**", "/api/v1/tasks",
-                                "/api/v1/submission/**","/api/v1/modules/update/**").hasRole("TEACHER")
-
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/*/role").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/users/update/**").hasRole("STUDENT")
+                        .requestMatchers("/api/vi/enrollments/progress", "/api/vi/enrollments/my").hasRole("STUDENT")
+                        .requestMatchers("/api/v1/users/auth/token").authenticated()
+                        .requestMatchers("/api/v1/submission/submit").hasRole("STUDENT")
+                        .requestMatchers(
+                                "/api/course/update/**", "/api/course/add", "/api/course/delete/**",
+                                "/api/v1/tasks", "/api/v1/submission/**", "/api/v1/modules/update/**"
+                        ).hasRole("TEACHER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)

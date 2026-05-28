@@ -12,7 +12,6 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "users")
-@Component
 public class User{
 
     @Id
@@ -25,7 +24,7 @@ public class User{
     private String fullName;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = RoleConverter.class)
     private Role role;
 
     private String password;

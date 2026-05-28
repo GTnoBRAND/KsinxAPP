@@ -1,6 +1,6 @@
 package org.jas.ksinxapp.model;
 
-import com.paypal.sdk.models.PaymentTokenStatus;
+
 import jakarta.persistence.*;
 import lombok.*;
 

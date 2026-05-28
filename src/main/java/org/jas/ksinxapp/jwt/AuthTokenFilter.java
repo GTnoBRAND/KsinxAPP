@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jas.ksinxapp.security.MyUserDetailService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,12 +17,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class AuthTokenFilter extends OncePerRequestFilter {
 
     public static final String BEARER_ = "Bearer ";
-    private JwtService jwtService;
-    private MyUserDetailService myUserDetailService;
+    private final JwtService jwtService;
+    private final MyUserDetailService myUserDetailService;
 
 
     private String parseJwt(HttpServletRequest request) {
@@ -39,19 +41,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         try{
             String jwt = parseJwt(request);
             if(jwt!= null && jwtService.validateJwtToken(jwt)){
-                String username = jwtService.getUserFromToken(jwt);     //get fullname from the request
-                UserDetails userDetails = myUserDetailService.loadUserByUsername(username);     //fetch user from db and compares with the user from the request
+                String email = jwtService.getUserFromToken(jwt);     //get fullname from the request
+                UserDetails userDetails = myUserDetailService.loadUserByUsername(email);     //fetch user from db and compares with the user from the request
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken( //security pass for this request
                         userDetails,    //who they are(userDetails),
                         null,   //no password needed token already provided identity
                         userDetails.getAuthorities()    //their permissions(their role)
-                );auth.setDetails(
+                    );auth.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request)      //attaches ip address and session id
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }filterChain.doFilter(request, response);
         } catch (RuntimeException e) {
-            throw new RuntimeException(e);
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
     }
 }

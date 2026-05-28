@@ -7,10 +7,13 @@ import org.jas.ksinxapp.model.Course;
 import org.jas.ksinxapp.service.CourseService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -38,15 +41,26 @@ public class CourseController {
         return ResponseEntity.ok(service.findById(id));
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<CourseResponse> update(@PathVariable @Valid Long id, @RequestBody CourseCreateRequest request){
-        return ResponseEntity.ok(service.updateResponse(id, request));
+    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CourseResponse> update(@PathVariable Long id,
+                                                 @RequestParam String title,
+                                                 @RequestParam String description,
+                                                 @RequestParam BigDecimal price,
+                                                 @RequestParam(required = false) MultipartFile image,
+                                                 @RequestParam(required = false) MultipartFile video){
+        CourseCreateRequest request = new CourseCreateRequest(title, description, price);
+        return ResponseEntity.ok(service.updateResponse(id, request, image, video));
     }
 
-    @PostMapping("/add")
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<CourseResponse> add(@Valid @RequestBody CourseCreateRequest request){
-        return ResponseEntity.ok(service.createResponse(request));
+    public ResponseEntity<CourseResponse> add(@RequestParam String title,
+                                              @RequestParam String description,
+                                              @RequestParam BigDecimal price,
+                                              @RequestParam(required = false) MultipartFile image,
+                                              @RequestParam(required = false) MultipartFile video){
+        CourseCreateRequest request = new CourseCreateRequest(title, description, price);
+        return ResponseEntity.ok(service.createResponse(request, image, video));
     }
 
     @DeleteMapping("/delete/{id}")

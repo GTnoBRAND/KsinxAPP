@@ -36,6 +36,10 @@ public class TaskSubmissionService {
         Task task = taskRepo.findById(request.taskId())
                 .orElseThrow(()->new RuntimeException("Task id not found"));
 
+        if(taskSubmissionRepo.existsByStudentIdAndTaskId(student.getId(), task.getId())){
+            throw new RuntimeException("You have already submitted this task");
+        }
+
         //we build the entity manually here as we need actual User and Task objects
         TaskSubmission taskSubmission = TaskSubmission.builder()
                 .task(task)

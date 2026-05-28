@@ -7,10 +7,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jas.ksinxapp.dtos.CreatePaymentRequest;
 import org.jas.ksinxapp.dtos.PaymentResponse;
+import org.jas.ksinxapp.model.Course;
 import org.jas.ksinxapp.model.PaymentStatus;
 import org.jas.ksinxapp.model.PaymentTransaction;
+import org.jas.ksinxapp.repo.CourseRepo;
 import org.jas.ksinxapp.repo.PaymentTransactionRepo;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,15 +21,12 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class PaymentService {
 
     private final PaypalServerSdkClient paypalServerSdkClient;
     private final PaymentTransactionRepo paymentTransactionRepo;
-
-    public PaymentService(PaypalServerSdkClient paypalServerSdkClient, PaymentTransactionRepo paymentTransactionRepo) {
-        this.paypalServerSdkClient = paypalServerSdkClient;
-        this.paymentTransactionRepo = paymentTransactionRepo;
-    }
+    private final CourseRepo courseRepo;
 
 
     //create the order for course payment
@@ -36,20 +34,27 @@ public class PaymentService {
     public CompletableFuture<PaymentResponse> createCoursePayment(Long userId, CreatePaymentRequest request){
         log.info("Creating PayPal order for user: {}, course: {}", userId, request.getCourseId());
 
+
+        //make a call to the db to fetch the course
+        // info to not let user change the price of the course from dev tools in the frontend
+
+        Course course = courseRepo.findById(request.getCourseId())
+                .orElseThrow(()->new RuntimeException("Course not found!"));
+
         //build the order request
         OrderRequest orderRequest = new OrderRequest.Builder(
                 CheckoutPaymentIntent.CAPTURE,
                 Arrays.asList(
                         new PurchaseUnitRequest.Builder(
                                 new AmountWithBreakdown.Builder(
-                                        request.getCurrency(),
-                                        request.getAmount().toPlainString()
+                                        "USD",
+                                        course.getPrice().toPlainString()
                                 )
                                         .breakdown(
                                                 new AmountBreakdown.Builder()
                                                         .itemTotal(new Money.Builder()
-                                                                .currencyCode(request.getCurrency())
-                                                                .value(request.getAmount().toPlainString())
+                                                                .currencyCode("USD")
+                                                                .value(course.getPrice().toPlainString())
                                                                 .build() // This builds the Money object
                                                         )
                                                         .build() // <--- ADD THIS: This builds the AmountBreakdown object
@@ -59,12 +64,12 @@ public class PaymentService {
                                 .referenceId("COURSE_" + request.getCourseId())
                                 .items(Arrays.asList(
                                        new ItemRequest.Builder()
-                                               .name(request.getCourseName())
+                                               .name(course.getTitle())
                                                .quantity("1")
-                                               .description(request.getCourseDescription())
+                                               .description(course.getDescription())
                                                .unitAmount(new Money.Builder()
-                                                       .currencyCode(request.getCurrency())
-                                                       .value(request.getAmount().toPlainString())
+                                                       .currencyCode("USD")
+                                                       .value(course.getPrice().toPlainString())
                                                        .build())
                                                .build()
 
@@ -96,8 +101,8 @@ public class PaymentService {
                             .paypalOrderId(order.getId())
                             .userId(userId)
                             .courseId(request.getCourseId())
-                            .amount(request.getAmount())
-                            .currency(request.getCurrency())
+                            .amount(course.getPrice())
+                            .currency("USD")
                             .status(PaymentStatus.PENDING)
                             .createdAt(LocalDateTime.now())
                             .build();
@@ -115,8 +120,8 @@ public class PaymentService {
                     return PaymentResponse.builder()
                             .paypalOrderId(order.getId())
                             .status(order.getStatus().toString())
-                            .amount(request.getAmount())
-                            .currency(request.getCurrency())
+                            .amount(course.getPrice())
+                            .currency("USD")
                             .createdAt(LocalDateTime.now())
                             .approvalLink(approvalLink)
                             .build();

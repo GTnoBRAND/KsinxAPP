@@ -1,5 +1,7 @@
 package org.jas.ksinxapp.service;
 
+import lombok.RequiredArgsConstructor;
+import org.jas.ksinxapp.dtos.ModulesRequest;
 import org.jas.ksinxapp.dtos.TaskRequest;
 import org.jas.ksinxapp.dtos.TaskResponse;
 import org.jas.ksinxapp.mappers.TaskMapper;
@@ -14,17 +16,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class TaskService {
 
     private final TaskRepo  taskRepo;
+    private final ModulesRepo  modulesRepo;
     private final TaskMapper taskMapper;
-    private final ModulesRepo modulesRepo;
-
-    public TaskService(TaskRepo taskRepo, TaskMapper taskMapper,  ModulesRepo modulesRepo) {
-        this.taskRepo = taskRepo;
-        this.taskMapper = taskMapper;
-        this.modulesRepo = modulesRepo;
-    }
 
     @Transactional
     public TaskResponse createTask(TaskRequest taskRequest) {
@@ -32,6 +29,10 @@ public class TaskService {
         //check if the module entity exists
         Modules modules = modulesRepo.findById(taskRequest.moduleId())
                 .orElseThrow(()->new RuntimeException("Module not found!"));
+
+        if(!modules.isActive()){
+            throw new RuntimeException("Module is inactive!");
+        }
 
         //map the basic fields
         Task task = taskMapper.toEntity(taskRequest);
@@ -47,6 +48,12 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<TaskResponse> getTasksForModule(Long moduleId) {
+
+        Modules modules = modulesRepo.findById(moduleId)
+                .orElseThrow(()->new RuntimeException("Module not found"));
+        if(!modules.isActive()){
+            throw new RuntimeException("Module is inactive now!");
+        }
 
         return taskRepo.findByModuleId(moduleId)
                 .stream()

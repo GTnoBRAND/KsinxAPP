@@ -31,6 +31,11 @@ public class Enrollment {
 
     private boolean isActive = true;
 
+    @PrePersist
+    public void onCreate(){
+        this.enrollmentDate = LocalDateTime.now();
+    }
+
     public Enrollment() {
     }
 
