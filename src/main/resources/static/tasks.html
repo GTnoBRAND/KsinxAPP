@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tasks — LutorLMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/index.html" class="navbar-brand"><div class="logo-dot"></div>LutorLMS</a>
+  <ul class="navbar-nav"><li><a href="/dashboard.html">Dashboard</a></li></ul>
+  <div class="navbar-actions" id="navbar-actions"></div>
+</nav>
+
+<div style="padding-top:68px">
+  <div class="section-sm container" style="max-width:800px">
+    <div style="margin-bottom:24px">
+      <a href="javascript:history.back()" class="btn btn-ghost btn-sm" style="padding-left:0">← Back</a>
+    </div>
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:8px">Module Tasks</h1>
+    <p style="color:var(--text-muted);font-size:.875rem;margin-bottom:32px">Submit your work and track your scores below.</p>
+    <div id="tasks-container"></div>
+  </div>
+</div>
+
+<!-- Submit Modal -->
+<div class="modal-overlay" id="submit-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 class="modal-title">Submit Task</h3>
+      <button class="modal-close" onclick="UI.closeModal('submit-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);margin-bottom:20px">Upload your solution file for <strong id="submit-task-title"></strong>.</p>
+      <div class="form-group">
+        <label class="form-label">Upload File</label>
+        <input type="file" id="submit-file" class="form-control" />
+      </div>
+      <div id="submit-error" style="color:var(--danger);font-size:.85rem;margin-top:8px;display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('submit-modal')">Cancel</button>
+      <button class="btn btn-primary" id="submit-confirm-btn">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script>
+  Auth.initNavUser();
+  var session = Auth.getSession();
+
+  var params   = new URLSearchParams(window.location.search);
+  var moduleId = params.get('moduleId');
+  if (!moduleId) window.location.href = '/index.html';
+
+  var selectedTaskId    = null;
+  var selectedTaskTitle = '';
+
+  function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function fmtDate(dt) {
+    if (!dt) return 'No due date';
+    return new Date(dt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+
+  var container = document.getElementById('tasks-container');
+  UI.renderLoading(container);
+
+  api.tasks.byModule(moduleId).then(function(tasks) {
+    if (!tasks || !tasks.length) {
+      UI.renderEmpty(container, '📋', 'No tasks yet', 'Check back later when the instructor adds assignments.');
+      return;
+    }
+    container.innerHTML = tasks.map(function(t) {
+      return '<div class="table-card" style="margin-bottom:20px">' +
+        '<div class="modal-body">' +
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">' +
+            '<div style="flex:1">' +
+              '<h3 style="font-size:1rem;font-weight:700;margin-bottom:6px">' + esc(t.title) + '</h3>' +
+              '<p style="font-size:.875rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.6">' + esc(t.instructions) + '</p>' +
+              '<div style="display:flex;gap:20px;font-size:.8rem;color:var(--text-muted)">' +
+                '<span>⭐ Max Score: <strong style="color:var(--text-primary)">' + t.maxScore + '</strong></span>' +
+                '<span>📅 Due: <strong style="color:var(--text-primary)">' + fmtDate(t.dueDate) + '</strong></span>' +
+              '</div>' +
+            '</div>' +
+            (session
+              ? '<button class="btn btn-primary btn-sm" onclick="openSubmit(' + t.id + ',\'' + esc(t.title).replace(/'/g,"\\'") + '\')">Submit Work</button>'
+              : '<a href="/login.html" class="btn btn-outline btn-sm">Login to Submit</a>') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }).catch(function(e) {
+    UI.renderEmpty(container, '😞', 'Could not load tasks', e.message || '');
+  });
+
+  function openSubmit(taskId, taskTitle) {
+    selectedTaskId    = taskId;
+    selectedTaskTitle = taskTitle;
+    document.getElementById('submit-task-title').textContent = taskTitle;
+    document.getElementById('submit-file').value = '';
+    document.getElementById('submit-error').style.display = 'none';
+    UI.openModal('submit-modal');
+  }
+
+  document.getElementById('submit-confirm-btn').addEventListener('click', function() {
+    var file  = document.getElementById('submit-file').files[0];
+    var errEl = document.getElementById('submit-error');
+    if (!file) { errEl.textContent = 'Please select a file.'; errEl.style.display = 'block'; return; }
+
+    var btn = document.getElementById('submit-confirm-btn');
+    UI.setLoading(btn, true);
+    errEl.style.display = 'none';
+
+    api.files.upload(file).then(function(uploadRes) {
+      var fileUrl = (uploadRes && uploadRes.fileDownloadUri) ? uploadRes.fileDownloadUri : String(uploadRes);
+      return api.submissions.submit({ taskId: selectedTaskId, studentId: session.user.id, fileUrl: fileUrl });
+    }).then(function() {
+      UI.toast('Assignment submitted successfully!', 'success');
+      UI.closeModal('submit-modal');
+    }).catch(function(e) {
+      errEl.textContent = e.message || 'Submission failed.';
+      errEl.style.display = 'block';
+    }).finally(function() {
+      UI.setLoading(btn, false);
+    });
+  });
+</script>
+</body>
+</html>

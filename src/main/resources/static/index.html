@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LutorLMS — Learn Without Limits</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/index.html" class="navbar-brand">
+    <div class="logo-dot"></div>
+    LutorLMS
+  </a>
+  <ul class="navbar-nav">
+    <li><a href="#courses" class="active">Courses</a></li>
+    <li><a href="#features">Features</a></li>
+  </ul>
+  <div class="navbar-actions" id="navbar-actions">
+    <a href="/login.html" class="btn btn-ghost btn-sm">Log in</a>
+    <a href="/register.html" class="btn btn-primary btn-sm">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid container">
+    <div class="hero-content">
+      <div class="hero-badge">🎓 The developer's learning platform</div>
+      <h1 class="hero-title">Master Tech Skills<br/><span class="highlight">Ship Real Projects</span></h1>
+      <p class="hero-subtitle">Structured courses taught by industry engineers. Learn Java, Spring Boot, DevOps and more — with hands-on assignments graded by real instructors.</p>
+      <div class="hero-actions">
+        <a href="#courses" class="btn btn-primary btn-lg">Browse Courses</a>
+        <a href="/register.html" class="btn btn-outline btn-lg">Start for Free</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><span class="stat-number" id="stat-courses">—</span><span class="stat-label">Courses</span></div>
+        <div class="stat-item"><span class="stat-number" id="stat-students">—</span><span class="stat-label">Students</span></div>
+        <div class="stat-item"><span class="stat-number">100%</span><span class="stat-label">Practical</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card"><div class="hero-card-icon green">💻</div><div class="hero-card-info"><h4>Spring Boot Mastery</h4><p>REST APIs, Security, Microservices</p></div></div>
+      <div class="hero-card"><div class="hero-card-icon blue">🚀</div><div class="hero-card-info"><h4>DevOps &amp; Cloud</h4><p>Docker, Kubernetes, CI/CD</p></div></div>
+      <div class="hero-card"><div class="hero-card-icon orange">🔬</div><div class="hero-card-info"><h4>Live Code Reviews</h4><p>Real feedback from instructors</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features" style="background:var(--bg-secondary);border-top:1px solid var(--border)">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Why LutorLMS</div>
+      <h2 class="section-title">Everything You Need to Level Up</h2>
+      <p class="section-subtitle">Built for developers who want to go beyond tutorials and build production-ready skills.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon">📹</div><h3>Video Modules</h3><p>Structured lessons with video content organised in logical sequences. Learn at your own pace.</p></div>
+      <div class="feature-card"><div class="feature-icon">✅</div><h3>Graded Assignments</h3><p>Submit real code and files. Get scored and receive written feedback from your instructor.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔐</div><h3>Secure Platform</h3><p>JWT-based authentication and Google OAuth. Your data and progress are always protected.</p></div>
+      <div class="feature-card"><div class="feature-icon">💳</div><h3>Flexible Payments</h3><p>Pay once or subscribe monthly. PayPal-powered checkout with instant access on payment.</p></div>
+      <div class="feature-card"><div class="feature-icon">📊</div><h3>Progress Tracking</h3><p>See all your enrolled courses, submission history, and scores in one clean dashboard.</p></div>
+      <div class="feature-card"><div class="feature-icon">🌍</div><h3>Access Anywhere</h3><p>Responsive design works on desktop, tablet, and mobile. Learn wherever you are.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- COURSES -->
+<section class="section" id="courses">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Catalog</div>
+      <h2 class="section-title">Featured Courses</h2>
+      <p class="section-subtitle">Handpicked courses to take you from zero to production-ready.</p>
+    </div>
+    <div class="courses-filter">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="free">Free</button>
+      <button class="filter-btn" data-filter="paid">Paid</button>
+    </div>
+    <div id="courses-grid" class="courses-grid">
+      <div class="loading-overlay" style="grid-column:1/-1">
+        <div class="spinner" style="width:36px;height:36px;border-width:3px"></div>
+        <span>Loading courses…</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section" style="background:var(--bg-secondary);border-top:1px solid var(--border)">
+  <div class="container" style="text-align:center;max-width:620px">
+    <div class="section-tag">Ready to start?</div>
+    <h2 class="section-title">Join Thousands of Developers</h2>
+    <p class="section-subtitle" style="margin-bottom:32px">Create a free account today. Browse courses, enroll, and start learning in minutes.</p>
+    <a href="/register.html" class="btn btn-primary btn-lg">Create Free Account</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="navbar-brand" style="justify-content:flex-start;margin-bottom:0"><div class="logo-dot"></div>LutorLMS</div>
+      <p>A modern learning management system built for developers, by developers.</p>
+    </div>
+    <div class="footer-col"><h4>Platform</h4><ul><li><a href="#courses">Courses</a></li><li><a href="/login.html">Login</a></li><li><a href="/register.html">Register</a></li></ul></div>
+    <div class="footer-col"><h4>Account</h4><ul><li><a href="/dashboard.html">Dashboard</a></li><li><a href="/teacher.html">Teacher Portal</a></li><li><a href="/admin.html">Admin</a></li></ul></div>
+    <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 LutorLMS. All rights reserved.</span>
+    <span>Built with Spring Boot &amp; ❤️</span>
+  </div>
+</footer>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script>
+  Auth.initNavUser();
+
+  var allCourses = [];
+  var currentFilter = 'all';
+
+  function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function renderCourses() {
+    var grid = document.getElementById('courses-grid');
+    var filtered = allCourses.filter(function(c) {
+      if (currentFilter === 'free') return !c.price || c.price == 0;
+      if (currentFilter === 'paid') return c.price && c.price > 0;
+      return true;
+    });
+    if (!filtered.length) {
+      UI.renderEmpty(grid, '📦', 'No courses found', 'Try changing the filter above.');
+      return;
+    }
+    grid.innerHTML = filtered.map(function(c) {
+      return '<div class="course-card" onclick="window.location.href=\'/course.html?id=' + c.id + '\'">' +
+        '<div class="course-thumbnail">' +
+          '<span style="position:relative;z-index:1">' + UI.courseEmoji(c.id) + '</span>' +
+          (c.price && c.price > 0
+            ? '<span class="course-badge">Premium</span>'
+            : '<span class="course-badge" style="background:#4da6ff;color:#000">Free</span>') +
+        '</div>' +
+        '<div class="course-body">' +
+          '<h3 class="course-title">' + esc(c.title) + '</h3>' +
+          '<p class="course-desc">' + esc(c.description || 'No description provided.') + '</p>' +
+          '<div class="course-meta">' +
+            '<span class="course-meta-item">📦 ' + (c.totalModules || 0) + ' modules</span>' +
+            '<span class="course-meta-item">⭐ 4.8</span>' +
+          '</div>' +
+          '<div class="course-price">' +
+            (c.price && c.price > 0
+              ? '<span class="price-tag">$' + Number(c.price).toFixed(2) + '</span>'
+              : '<span class="price-free">Free</span>') +
+            '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();window.location.href=\'/course.html?id=' + c.id + '\'">Enroll</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  api.courses.all(1, 12).then(function(data) {
+    allCourses = Array.isArray(data) ? data : (data && data.content ? data.content : []);
+    document.getElementById('stat-courses').textContent = allCourses.length + '+';
+    renderCourses();
+  }).catch(function() {
+    UI.renderEmpty(document.getElementById('courses-grid'), '😞', 'Could not load courses', 'Please try again later.');
+  });
+
+  api.auth.allUsers().then(function(users) {
+    var students = (Array.isArray(users) ? users : []).filter(function(u){ return u.role === 'STUDENT'; });
+    document.getElementById('stat-students').textContent = students.length + '+';
+  }).catch(function() {
+    document.getElementById('stat-students').textContent = '100+';
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderCourses();
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signing in… — LutorLMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px">
+  <div class="spinner" style="width:40px;height:40px;border-width:3px"></div>
+  <p style="color:var(--text-secondary);font-size:.95rem" id="status-msg">Completing sign-in…</p>
+</div>
+
+<script src="/js/auth.js"></script>
+<script>
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    var token  = params.get('token');
+    var name   = params.get('name');
+    var role   = params.get('role');
+    var id     = params.get('id');
+
+    if (!token || !name || !role) {
+      document.getElementById('status-msg').textContent = 'Sign-in failed. Redirecting…';
+      setTimeout(function () { window.location.href = '/login.html'; }, 2000);
+      return;
+    }
+
+    Auth.saveSession(token, { id: Number(id), fullName: decodeURIComponent(name), role: decodeURIComponent(role) });
+
+    var dest = role === 'ADMIN' ? '/admin.html' : role === 'TEACHER' ? '/teacher.html' : '/dashboard.html';
+    window.location.replace(dest);
+  })();
+</script>
+</body>
+</html>

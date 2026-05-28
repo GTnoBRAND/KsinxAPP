@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — LutorLMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/index.html" class="navbar-brand">
+    <div class="logo-dot"></div>LutorLMS
+    <span style="font-size:.7rem;background:var(--danger);color:#fff;padding:2px 8px;border-radius:50px;margin-left:6px;font-weight:700">ADMIN</span>
+  </a>
+  <div class="navbar-actions" id="navbar-actions"></div>
+</nav>
+
+<div class="dashboard-layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Admin</div>
+      <div class="sidebar-item active" data-tab="overview"><span class="sidebar-icon">🏠</span> Overview</div>
+      <div class="sidebar-item" data-tab="courses"><span class="sidebar-icon">📚</span> Courses</div>
+      <div class="sidebar-item" data-tab="users"><span class="sidebar-icon">👥</span> Users</div>
+      <div class="sidebar-item" data-tab="enrollments"><span class="sidebar-icon">🎓</span> Enrollments</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Portal</div>
+      <a class="sidebar-item" href="/teacher.html"><span class="sidebar-icon">✏️</span> Teacher View</a>
+      <a class="sidebar-item" href="/dashboard.html"><span class="sidebar-icon">👤</span> Student View</a>
+    </div>
+  </aside>
+
+  <main class="dashboard-main">
+
+    <!-- Overview -->
+    <div id="tab-overview" class="tab-panel active">
+      <div class="page-header">
+        <div><h1 class="page-title">Admin Dashboard</h1><p class="page-subtitle">Platform overview and controls</p></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div><div class="stat-card-value" id="s-courses">—</div><div class="stat-card-label">Courses</div></div><div class="stat-card-icon green">📚</div></div>
+        <div class="stat-card"><div><div class="stat-card-value" id="s-users">—</div><div class="stat-card-label">Users</div></div><div class="stat-card-icon blue">👥</div></div>
+        <div class="stat-card"><div><div class="stat-card-value" id="s-students">—</div><div class="stat-card-label">Students</div></div><div class="stat-card-icon orange">🎓</div></div>
+        <div class="stat-card"><div><div class="stat-card-value" id="s-enrollments">—</div><div class="stat-card-label">Enrollments</div></div><div class="stat-card-icon green">📋</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="table-card">
+          <div class="table-header"><span class="table-title">Recent Courses</span><button class="btn btn-outline btn-sm" onclick="switchTab('courses')">View All</button></div>
+          <div id="overview-courses-list"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><span class="table-title">Recent Users</span><button class="btn btn-outline btn-sm" onclick="switchTab('users')">View All</button></div>
+          <div id="overview-users-list"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Courses -->
+    <div id="tab-courses" class="tab-panel">
+      <div class="page-header">
+        <div><h1 class="page-title">Courses</h1><p class="page-subtitle">Create and manage all courses</p></div>
+        <button class="btn btn-primary btn-sm" onclick="resetCourseForm();UI.openModal('course-modal')">+ New Course</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><span class="table-title">All Courses</span><button class="btn btn-outline btn-sm" onclick="loadCourses()">↻ Refresh</button></div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th>ID</th><th>Title</th><th>Price</th><th>Modules</th><th>Actions</th></tr></thead>
+            <tbody id="courses-tbody"><tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div id="tab-users" class="tab-panel">
+      <div class="page-header">
+        <div><h1 class="page-title">Users</h1><p class="page-subtitle">Manage all registered users</p></div>
+        <div class="search-bar" style="max-width:280px">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="user-search" placeholder="Search by name…" oninput="filterUsers(this.value)" />
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th>ID</th><th>Full Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enrollments -->
+    <div id="tab-enrollments" class="tab-panel">
+      <div class="page-header">
+        <div><h1 class="page-title">Enrollments</h1><p class="page-subtitle">View all student course enrollments</p></div>
+        <button class="btn btn-primary btn-sm" onclick="UI.openModal('enroll-modal')">+ Enroll Student</button>
+      </div>
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th>ID</th><th>Student</th><th>Course</th><th>Enrolled</th><th>Status</th></tr></thead>
+            <tbody id="enrollments-tbody"><tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Course Modal -->
+<div class="modal-overlay" id="course-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><h3 class="modal-title" id="course-modal-title">New Course</h3><button class="modal-close" onclick="UI.closeModal('course-modal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="course-edit-id" />
+      <div class="form-group"><label class="form-label">Title</label><input class="form-control" id="course-title" placeholder="e.g. Full Stack Java Development" /></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="course-desc" rows="3" placeholder="Course description…"></textarea></div>
+      <div class="form-group"><label class="form-label">Price (USD) — 0 for free</label><input class="form-control" type="number" id="course-price" value="0" min="0" step="0.01" /></div>
+      <div class="form-group">
+        <label class="form-label">Cover Photo</label>
+        <input class="form-control" type="file" id="course-image" accept="image/*" />
+        <img id="course-image-preview" alt="Cover preview" class="media-preview" style="display:none" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teaser Video (spoiler)</label>
+        <input class="form-control" type="file" id="course-video" accept="video/*" />
+        <video id="course-video-preview" controls class="media-preview" style="display:none"></video>
+      </div>
+      <div style="color:var(--text-muted);font-size:.78rem;margin-top:4px">When editing, leave a file empty to keep the current media.</div>
+      <div id="course-modal-error" style="color:var(--danger);font-size:.85rem;margin-top:8px;display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('course-modal')">Cancel</button>
+      <button class="btn btn-primary" id="course-save-btn">Save Course</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><h3 class="modal-title">Delete Course?</h3><button class="modal-close" onclick="UI.closeModal('delete-modal')">✕</button></div>
+    <div class="modal-body"><p style="color:var(--text-secondary)">This will soft-delete <strong id="delete-course-name"></strong>. It can be reactivated later.</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('delete-modal')">Cancel</button>
+      <button class="btn btn-danger" id="delete-confirm-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Enroll Modal -->
+<div class="modal-overlay" id="enroll-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title">Enroll Student</h3><button class="modal-close" onclick="UI.closeModal('enroll-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Student</label><select class="form-control" id="enroll-user-id"></select></div>
+      <div class="form-group"><label class="form-label">Course</label><select class="form-control" id="enroll-course-id"></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('enroll-modal')">Cancel</button>
+      <button class="btn btn-primary" id="enroll-save-btn">Enroll</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script>
+  Auth.requireAuth(['ADMIN']);
+  Auth.initNavUser();
+
+  var allCourses = [], allUsers = [], allEnrollments = [];
+  var deleteTargetId = null;
+
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtDate(dt){ if(!dt)return '—'; return new Date(dt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.sidebar-item[data-tab]').forEach(function(i){ i.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    var item = document.querySelector('.sidebar-item[data-tab="' + tab + '"]');
+    if (item) item.classList.add('active');
+    var panel = document.getElementById('tab-' + tab);
+    if (panel) panel.classList.add('active');
+  }
+
+  document.querySelectorAll('.sidebar-item[data-tab]').forEach(function(item) {
+    item.addEventListener('click', function(){ switchTab(item.dataset.tab); });
+  });
+
+  function init() {
+    Promise.all([loadCourses(), loadUsers(), loadEnrollments()]);
+  }
+
+  // ── Courses ──────────────────────────────────────────
+  function loadCourses() {
+    return api.courses.all(1,50).then(function(data) {
+      allCourses = Array.isArray(data) ? data : (data&&data.content ? data.content : []);
+      document.getElementById('s-courses').textContent = allCourses.length;
+      renderCoursesTable();
+      renderOverviewCourses();
+      var opts = allCourses.map(function(c){ return '<option value="' + c.id + '">' + esc(c.title) + '</option>'; }).join('');
+      document.getElementById('enroll-course-id').innerHTML = opts;
+    }).catch(function(e){ UI.toast('Failed to load courses: ' + e.message,'error'); });
+  }
+
+  function renderCoursesTable() {
+    var tbody = document.getElementById('courses-tbody');
+    if (!allCourses.length) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📚</div><h3>No courses yet</h3></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = allCourses.map(function(c) {
+      return '<tr>' +
+        '<td style="color:var(--text-muted)">#' + c.id + '</td>' +
+        '<td><strong>' + esc(c.title) + '</strong></td>' +
+        '<td>' + (c.price&&c.price>0 ? '<span style="color:var(--accent)">$'+Number(c.price).toFixed(2)+'</span>' : '<span class="badge badge-success">Free</span>') + '</td>' +
+        '<td>' + (c.totalModules||0) + '</td>' +
+        '<td>' +
+          '<div style="display:flex;gap:8px">' +
+            '<button class="btn btn-outline btn-sm" onclick="editCourse(' + c.id + ')">Edit</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="confirmDelete(' + c.id + ',\'' + esc(c.title).replace(/'/g,"\\'") + '\')">Delete</button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function renderOverviewCourses() {
+    var el = document.getElementById('overview-courses-list');
+    if (!allCourses.length) { UI.renderEmpty(el,'📚','No courses yet',''); return; }
+    el.innerHTML = '<div class="table-responsive"><table><tbody>' +
+      allCourses.slice(0,5).map(function(c){
+        return '<tr><td><strong>' + esc(c.title) + '</strong></td><td>' + (c.price&&c.price>0?'$'+Number(c.price).toFixed(2):'Free') + '</td></tr>';
+      }).join('') +
+    '</tbody></table></div>';
+  }
+
+  function clearMediaPreviews() {
+    var img = document.getElementById('course-image-preview');
+    var vid = document.getElementById('course-video-preview');
+    img.src = ''; img.style.display = 'none';
+    vid.src = ''; vid.style.display = 'none';
+  }
+
+  function resetCourseForm() {
+    document.getElementById('course-edit-id').value = '';
+    document.getElementById('course-title').value   = '';
+    document.getElementById('course-desc').value    = '';
+    document.getElementById('course-price').value   = '0';
+    document.getElementById('course-image').value    = '';
+    document.getElementById('course-video').value    = '';
+    clearMediaPreviews();
+    document.getElementById('course-modal-title').textContent = 'New Course';
+    document.getElementById('course-modal-error').style.display = 'none';
+  }
+
+  function editCourse(id) {
+    var c = allCourses.find(function(x){ return x.id===id; });
+    if (!c) return;
+    resetCourseForm();
+    document.getElementById('course-edit-id').value = id;
+    document.getElementById('course-title').value   = c.title;
+    document.getElementById('course-desc').value    = c.description || '';
+    document.getElementById('course-price').value   = c.price || 0;
+    // show current media; leaving the file inputs empty keeps it unchanged
+    if (c.imageUrl) {
+      var img = document.getElementById('course-image-preview');
+      img.src = c.imageUrl; img.style.display = 'block';
+    }
+    if (c.videoUrl) {
+      var vid = document.getElementById('course-video-preview');
+      vid.src = c.videoUrl; vid.style.display = 'block';
+    }
+    document.getElementById('course-modal-title').textContent = 'Edit Course';
+    UI.openModal('course-modal');
+  }
+
+  // live preview of the file the admin just picked
+  document.getElementById('course-image').addEventListener('change', function() {
+    var img = document.getElementById('course-image-preview');
+    if (this.files && this.files[0]) {
+      img.src = URL.createObjectURL(this.files[0]);
+      img.style.display = 'block';
+    } else {
+      img.src = ''; img.style.display = 'none';
+    }
+  });
+  document.getElementById('course-video').addEventListener('change', function() {
+    var vid = document.getElementById('course-video-preview');
+    if (this.files && this.files[0]) {
+      vid.src = URL.createObjectURL(this.files[0]);
+      vid.style.display = 'block';
+    } else {
+      vid.src = ''; vid.style.display = 'none';
+    }
+  });
+
+  document.getElementById('course-save-btn').addEventListener('click', function() {
+    var id    = document.getElementById('course-edit-id').value;
+    var title = document.getElementById('course-title').value.trim();
+    var desc  = document.getElementById('course-desc').value.trim();
+    var price = parseFloat(document.getElementById('course-price').value)||0;
+    var errEl = document.getElementById('course-modal-error');
+    if (!title||!desc) { errEl.textContent='Title and description are required.'; errEl.style.display='block'; return; }
+    errEl.style.display='none';
+    var btn = document.getElementById('course-save-btn');
+    UI.setLoading(btn, true);
+    var fd = new FormData();
+    fd.append('title', title);
+    fd.append('description', desc);
+    fd.append('price', price);
+    var imgFile = document.getElementById('course-image').files[0];
+    var vidFile = document.getElementById('course-video').files[0];
+    if (imgFile) fd.append('image', imgFile);
+    if (vidFile) fd.append('video', vidFile);
+    var p = id ? api.courses.update(id, fd) : api.courses.create(fd);
+    p.then(function() {
+      UI.toast(id?'Course updated!':'Course created!','success');
+      UI.closeModal('course-modal');
+      loadCourses();
+    }).catch(function(e){ errEl.textContent=e.message; errEl.style.display='block'; })
+     .finally(function(){ UI.setLoading(btn,false); });
+  });
+
+  function confirmDelete(id, name) {
+    deleteTargetId = id;
+    document.getElementById('delete-course-name').textContent = name;
+    UI.openModal('delete-modal');
+  }
+
+  document.getElementById('delete-confirm-btn').addEventListener('click', function() {
+    if (!deleteTargetId) return;
+    var btn = document.getElementById('delete-confirm-btn');
+    UI.setLoading(btn, true);
+    api.courses.delete(deleteTargetId, false).then(function() {
+      UI.toast('Course deleted','success');
+      UI.closeModal('delete-modal');
+      loadCourses();
+    }).catch(function(e){ UI.toast(e.message,'error'); })
+     .finally(function(){ UI.setLoading(btn,false); deleteTargetId=null; });
+  });
+
+  // ── Users ─────────────────────────────────────────────
+  function loadUsers() {
+    return api.auth.allUsers().then(function(data) {
+      allUsers = data || [];
+      document.getElementById('s-users').textContent    = allUsers.length;
+      document.getElementById('s-students').textContent = allUsers.filter(function(u){ return u.role==='STUDENT'; }).length;
+      renderUsersTable(allUsers);
+      renderOverviewUsers();
+      var opts = allUsers.filter(function(u){ return u.role==='STUDENT'; })
+                         .map(function(u){ return '<option value="' + u.id + '">' + esc(u.fullName) + '</option>'; }).join('');
+      document.getElementById('enroll-user-id').innerHTML = opts;
+    }).catch(function(e){ UI.toast('Failed to load users: ' + e.message,'error'); });
+  }
+
+  function renderUsersTable(users) {
+    var tbody = document.getElementById('users-tbody');
+    if (!users.length) {
+      tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👥</div><h3>No users</h3></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(function(u) {
+      var initials = (u.fullName||'?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+      return '<tr>' +
+        '<td style="color:var(--text-muted)">#' + u.id + '</td>' +
+        '<td>' +
+          '<div style="display:flex;align-items:center;gap:10px">' +
+            '<div class="avatar" style="width:30px;height:30px;font-size:.7rem">' + initials + '</div>' +
+            '<strong>' + esc(u.fullName) + '</strong>' +
+          '</div>' +
+        '</td>' +
+        '<td>' + esc(u.email) + '</td>' +
+        '<td><span class="badge ' + (u.role==='ADMIN'?'badge-danger':u.role==='TEACHER'?'badge-info':'badge-success') + '">' + u.role + '</span></td>' +
+        '<td>' +
+          '<div style="display:flex;gap:8px;align-items:center">' +
+            '<select class="form-control" style="width:auto;min-width:110px;padding:5px 8px;font-size:.8rem" onchange="changeRole(' + u.id + ',this.value,this)">' +
+              '<option value="STUDENT"' + (u.role==='STUDENT'?' selected':'') + '>Student</option>' +
+              '<option value="TEACHER"' + (u.role==='TEACHER'?' selected':'') + '>Teacher</option>' +
+              '<option value="ADMIN"'   + (u.role==='ADMIN'?' selected':'')   + '>Admin</option>' +
+            '</select>' +
+            '<button class="btn btn-danger btn-sm" onclick="deleteUser(' + u.id + ',\'' + esc(u.fullName).replace(/'/g,"\\'") + '\')">Remove</button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function renderOverviewUsers() {
+    var el = document.getElementById('overview-users-list');
+    if (!allUsers.length) { UI.renderEmpty(el,'👥','No users yet',''); return; }
+    el.innerHTML = '<div class="table-responsive"><table><tbody>' +
+      allUsers.slice(0,5).map(function(u){
+        return '<tr>' +
+          '<td><strong>' + esc(u.fullName) + '</strong></td>' +
+          '<td><span class="badge ' + (u.role==='ADMIN'?'badge-danger':u.role==='TEACHER'?'badge-info':'badge-success') + '">' + u.role + '</span></td>' +
+        '</tr>';
+      }).join('') +
+    '</tbody></table></div>';
+  }
+
+  function filterUsers(q) {
+    var filtered = q ? allUsers.filter(function(u){
+      return u.fullName.toLowerCase().includes(q.toLowerCase()) || u.email.toLowerCase().includes(q.toLowerCase());
+    }) : allUsers;
+    renderUsersTable(filtered);
+  }
+
+  function deleteUser(id, name) {
+    if (!confirm('Remove user ' + name + '?')) return;
+    api.auth.deleteUser(id).then(function() {
+      UI.toast('User removed','success');
+      loadUsers();
+    }).catch(function(e){ UI.toast(e.message,'error'); });
+  }
+
+  function changeRole(id, role, selectEl) {
+    var user = allUsers.find(function(u){ return u.id===id; }) || {};
+    var prev = user.role;
+    if (role === prev) return;
+    if (!confirm('Change ' + (user.fullName||'this user') + '\'s role from ' + prev + ' to ' + role + '?')) {
+      if (selectEl) selectEl.value = prev;
+      return;
+    }
+    api.auth.setRole(id, role).then(function() {
+      UI.toast('Role updated to ' + role, 'success');
+      loadUsers();
+    }).catch(function(e){
+      UI.toast(e.message, 'error');
+      if (selectEl) selectEl.value = prev;
+    });
+  }
+
+  // ── Enrollments ───────────────────────────────────────
+  function loadEnrollments() {
+    return api.enrollments.all().then(function(data) {
+      allEnrollments = data || [];
+      document.getElementById('s-enrollments').textContent = allEnrollments.length;
+      renderEnrollmentsTable();
+    }).catch(function(e){ UI.toast('Failed to load enrollments: ' + e.message,'error'); });
+  }
+
+  function renderEnrollmentsTable() {
+    var tbody = document.getElementById('enrollments-tbody');
+    if (!allEnrollments.length) {
+      tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🎓</div><h3>No enrollments</h3></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = allEnrollments.map(function(e) {
+      return '<tr>' +
+        '<td style="color:var(--text-muted)">#' + e.enrollmentId + '</td>' +
+        '<td>' + esc(e.studentFullName) + '</td>' +
+        '<td>' + esc(e.courseTitle) + '</td>' +
+        '<td>' + fmtDate(e.enrollmentDate) + '</td>' +
+        '<td><span class="badge ' + (e.isActive?'badge-success':'badge-muted') + '">' + (e.isActive?'Active':'Inactive') + '</span></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  document.getElementById('enroll-save-btn').addEventListener('click', function() {
+    var userId   = document.getElementById('enroll-user-id').value;
+    var courseId = document.getElementById('enroll-course-id').value;
+    if (!userId||!courseId) { UI.toast('Select a user and course','error'); return; }
+    var btn = document.getElementById('enroll-save-btn');
+    UI.setLoading(btn, true);
+    api.enrollments.enroll({ userId:Number(userId), courseId:Number(courseId) }).then(function() {
+      UI.toast('Student enrolled!','success');
+      UI.closeModal('enroll-modal');
+      loadEnrollments();
+    }).catch(function(e){ UI.toast(e.message,'error'); })
+     .finally(function(){ UI.setLoading(btn,false); });
+  });
+
+  init();
+</script>
+</body>
+</html>
