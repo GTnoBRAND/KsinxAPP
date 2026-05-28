@@ -1,0 +1,72 @@
+name: lutorlms
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: lutorlms-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-lutorlms}
+      POSTGRES_USER:     ${POSTGRES_USER:-lutorlms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lutorlms}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lutorlms} -d ${POSTGRES_DB:-lutorlms}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: lutorlms-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    image: ${DOCKERHUB_USER:-gtnobrand}/lutorlms:${APP_TAG:-latest}
+    container_name: lutorlms-app
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # ── Infra (compose handles these) ──────────────────────
+      DB_URL:      jdbc:postgresql://db:5432/${POSTGRES_DB:-lutorlms}
+      DB_USERNAME: ${POSTGRES_USER:-lutorlms}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-lutorlms}
+      REDIS_HOST:  redis
+      REDIS_PORT:  6379
+      # Spring Boot translates this env name to spring.jpa.hibernate.ddl-auto
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${DDL_AUTO:-update}
+      # ── App secrets (override via .env) ────────────────────
+      JWT_SECRET:          ${JWT_SECRET:-Vm6f+68svJGzvIToFGMzKnhS0kJaxrO3P4ZnucHfN8Q=}
+      ADMIN_EMAIL:         ${ADMIN_EMAIL:-admin@lms.com}
+      ADMIN_PASSWORD:      ${ADMIN_PASSWORD:-administrator1}
+      GOOGLE_CLIENT_ID:    ${GOOGLE_CLIENT_ID:-503251107122-fdi6hbnj2miao9ote08kp1kb7ruubdh8.apps.googleusercontent.com}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-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}
+      PAYPAL_CLIENT_ID:    ${PAYPAL_CLIENT_ID:-ASEYI-QeTZzrlScvGMrmv_mavMn13iYjnI-k6OOtJsGWi6N_UQbX09g7Koz5UWN3LlPR9-wxEBJxIl46}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-EFOP3wRnVhmCX9jKip7jqfMCqoS8Wgb1EndYuIzNT2k5BVPU942ycUHq8G7TIbnTTftrBqMug4JCeMKC}
+      PAYPAL_MODE:         ${PAYPAL_MODE:-sandbox}
+      JAVA_OPTS:           ${JAVA_OPTS:--Xms256m -Xmx768m}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:
