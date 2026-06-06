@@ -26,7 +26,7 @@ import java.util.Map;
 @Slf4j
 public class JwtService {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:}")
     private String jwtSecret;
     @Value("${jwt.expiration}")
     private long jwtExpiration;
@@ -35,7 +35,15 @@ public class JwtService {
 
     @PostConstruct
     public void init(){
-        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            // No secret configured (e.g. local dev): generate an ephemeral key so the app still
+            // boots. Tokens are invalidated on every restart — set JWT_SECRET in production.
+            this.key = Jwts.SIG.HS256.key().build();
+            log.warn("jwt.secret is not set — generated an ephemeral dev key. " +
+                    "Set the JWT_SECRET env var to a stable base64 256-bit key in production.");
+        } else {
+            this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        }
     }
 
 

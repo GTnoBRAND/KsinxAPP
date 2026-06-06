@@ -1,11 +1,10 @@
 package org.jas.ksinxapp.payment;
 
 import com.paypal.sdk.PaypalServerSdkClient;
-import com.paypal.sdk.http.response.ApiResponse;
 import com.paypal.sdk.models.*;
+import com.paypal.sdk.http.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jas.ksinxapp.dtos.CreatePaymentRequest;
 import org.jas.ksinxapp.dtos.PaymentResponse;
 import org.jas.ksinxapp.model.Course;
 import org.jas.ksinxapp.model.PaymentStatus;
@@ -16,79 +15,50 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentService {
 
-    private final PaypalServerSdkClient paypalServerSdkClient;
+    private final PaypalServerSdkClient paypalClient;
     private final PaymentTransactionRepo paymentTransactionRepo;
     private final CourseRepo courseRepo;
 
-
-    //create the order for course payment
     @Transactional
-    public CompletableFuture<PaymentResponse> createCoursePayment(Long userId, CreatePaymentRequest request){
-        log.info("Creating PayPal order for user: {}, course: {}", userId, request.getCourseId());
+    public CompletableFuture<PaymentResponse> createOrder(Long userId, Long courseId) {
 
+        // Fetch real price from DB — never trust the frontend
+        Course course = courseRepo.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
 
-        //make a call to the db to fetch the course
-        // info to not let user change the price of the course from dev tools in the frontend
-
-        Course course = courseRepo.findById(request.getCourseId())
-                .orElseThrow(()->new RuntimeException("Course not found!"));
-
-        //build the order request
+        // Build the PayPal order request
         OrderRequest orderRequest = new OrderRequest.Builder(
                 CheckoutPaymentIntent.CAPTURE,
-                Arrays.asList(
+                List.of(
                         new PurchaseUnitRequest.Builder(
                                 new AmountWithBreakdown.Builder(
                                         "USD",
                                         course.getPrice().toPlainString()
-                                )
-                                        .breakdown(
-                                                new AmountBreakdown.Builder()
-                                                        .itemTotal(new Money.Builder()
-                                                                .currencyCode("USD")
-                                                                .value(course.getPrice().toPlainString())
-                                                                .build() // This builds the Money object
-                                                        )
-                                                        .build() // <--- ADD THIS: This builds the AmountBreakdown object
-                                        )
-                                        .build()
+                                ).build()
                         )
-                                .referenceId("COURSE_" + request.getCourseId())
-                                .items(Arrays.asList(
-                                       new ItemRequest.Builder()
-                                               .name(course.getTitle())
-                                               .quantity("1")
-                                               .description(course.getDescription())
-                                               .unitAmount(new Money.Builder()
-                                                       .currencyCode("USD")
-                                                       .value(course.getPrice().toPlainString())
-                                                       .build())
-                                               .build()
-
-                                ))
+                                .referenceId("COURSE_" + courseId)
                                 .build()
                 )
-
         )
                 .applicationContext(
                         new OrderApplicationContext.Builder()
-                                .brandName("KsinxAPP language Learning Center")
-                                .landingPage(OrderApplicationContextLandingPage.BILLING)
+                                .brandName("LutorLMS")
                                 .userAction(OrderApplicationContextUserAction.PAY_NOW)
-                                .returnUrl("http://localhost:8080/api" + "/payments/return?userId=" + userId + "&courseId=" + request.getCourseId())
-                                .cancelUrl("http://localhost:8080/api" + "/payments/cancel")
+                                .returnUrl("http://localhost:8080/api/v1/payments/return")
+                                .cancelUrl("http://localhost:8080/api/v1/payments/cancel")
                                 .build()
-                ).build();
-        //create order in paypal
-        return paypalServerSdkClient.getOrdersController()
+                )
+                .build();
+
+        return paypalClient.getOrdersController()
                 .createOrderAsync(
                         new CreateOrderInput.Builder(null, orderRequest)
                                 .prefer("return=representation")
@@ -96,11 +66,11 @@ public class PaymentService {
                 )
                 .thenApply(ApiResponse::getResult)
                 .thenApply(order -> {
-                    //save pending transaction to db
+                    // Save PENDING transaction to DB
                     PaymentTransaction transaction = PaymentTransaction.builder()
                             .paypalOrderId(order.getId())
                             .userId(userId)
-                            .courseId(request.getCourseId())
+                            .courseId(courseId)
                             .amount(course.getPrice())
                             .currency("USD")
                             .status(PaymentStatus.PENDING)
@@ -108,83 +78,67 @@ public class PaymentService {
                             .build();
                     paymentTransactionRepo.save(transaction);
 
-                    //extract approval link
+                    // Extract approval link from PayPal response
                     String approvalLink = order.getLinks().stream()
-                            .filter(link->"approve".equals(link.getRel()))
+                            .filter(link -> "approve".equals(link.getRel()))
                             .map(LinkDescription::getHref)
                             .findFirst()
-                            .orElse(null);
+                            .orElseThrow(() -> new RuntimeException("No approval link from PayPal"));
 
-                    log.info("Order created successfully: {}", order.getId());
+                    log.info("PayPal order created: {}", order.getId());
 
                     return PaymentResponse.builder()
                             .paypalOrderId(order.getId())
-                            .status(order.getStatus().toString())
+                            .approvalLink(approvalLink)
+                            .status(PaymentStatus.PENDING)
                             .amount(course.getPrice())
                             .currency("USD")
                             .createdAt(LocalDateTime.now())
-                            .approvalLink(approvalLink)
                             .build();
                 })
-                .exceptionally(throwable -> {
-                    log.error("Error creating PayPal order", throwable);
-                    throw new RuntimeException("Failed to create order: " + throwable.getMessage(), throwable);
+                .exceptionally(ex -> {
+                    log.error("Failed to create PayPal order", ex);
+                    throw new RuntimeException("Payment creation failed: " + ex.getMessage());
                 });
-
     }
 
-    //capture order after user approval
-
     @Transactional
-    public CompletableFuture<PaymentResponse> captureOrder(String orderId, Long userId){
-        log.info("Capturing an order: {} for user: {}", orderId, userId);
-
-        return paypalServerSdkClient.getOrdersController()
-                .createOrderAsync(
-                        new CreateOrderInput.Builder()
+    public CompletableFuture<PaymentResponse> captureOrder(String paypalOrderId, Long userId) {
+        return paypalClient.getOrdersController()
+                .captureOrderAsync(
+                        new CaptureOrderInput.Builder(paypalOrderId, null)
                                 .prefer("return=representation")
                                 .build()
-                ).thenApply(ApiResponse::getResult)
+                )
+                .thenApply(ApiResponse::getResult)
                 .thenApply(order -> {
-                    //update transaction status
-                    PaymentTransaction transaction = paymentTransactionRepo.findByPaypalOrderId(orderId)
-                            .orElseThrow(()->new RuntimeException("Transaction not found"));
+                    // Find the PENDING transaction saved in createOrder()
+                    PaymentTransaction transaction = paymentTransactionRepo
+                            .findByPaypalOrderId(paypalOrderId)
+                            .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
-                    //extract capture ID
+                    // Extract capture ID from nested PayPal response
                     String captureId = order.getPurchaseUnits().get(0)
                             .getPayments().getCaptures().get(0).getId();
 
-                    transaction.setPayPalCaptureId(captureId);
+                    // Update transaction in DB
                     transaction.setStatus(PaymentStatus.COMPLETED);
+                    transaction.setPaypalCaptureId(captureId);
                     transaction.setCompletedAt(LocalDateTime.now());
                     paymentTransactionRepo.save(transaction);
 
-                    log.info("Order captured successfully: {}", orderId);
+                    log.info("PayPal order captured: {} captureId: {}", paypalOrderId, captureId);
 
                     return PaymentResponse.builder()
-                            .paypalOrderId(orderId)
-                            .status("COMPLETED")
+                            .paypalOrderId(paypalOrderId)
+                            .status(PaymentStatus.COMPLETED)
                             .amount(transaction.getAmount())
                             .currency(transaction.getCurrency())
-                            .createdAt(transaction.getCreatedAt())
                             .build();
                 })
-                .exceptionally(throwable -> {
-                    log.error("Error capturing order: {}", orderId, throwable);
-                    throw new RuntimeException("Failed to capture order", throwable);
-                });
-
-    }
-
-    //get order details
-    public CompletableFuture<Order> getOrderDetails(String orderId){
-        return paypalServerSdkClient.getOrdersController()
-                .getOrderAsync(new GetOrderInput.Builder(orderId).build())
-                .thenApply(ApiResponse::getResult)
-                .exceptionally(throwable -> {
-                    log.error("Error retrieving order: {}", orderId, throwable);
-                    throw new RuntimeException("Failed to retrieve order", throwable);
+                .exceptionally(ex -> {
+                    log.error("Failed to capture PayPal order", ex);
+                    throw new RuntimeException("Payment capture failed: " + ex.getMessage());
                 });
     }
-
 }

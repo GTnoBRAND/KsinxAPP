@@ -103,6 +103,46 @@ cd lutorLMS
 
 The server starts on `http://localhost:8080` by default.
 
+> **Schema management:** the database schema is owned by **Flyway** (migrations in
+> `src/main/resources/db/migration`). Hibernate runs in `validate` mode and only checks
+> that the entities match the migrated schema. To change the schema, add a new
+> `V2__*.sql` migration rather than relying on `ddl-auto`.
+
+> **Secrets:** no real credentials are committed. `JWT_SECRET`, PayPal, and Google
+> OAuth values come from environment variables. Locally the app boots without them
+> (it generates an ephemeral JWT key and disables OAuth/PayPal until configured).
+
+---
+
+## Deployment
+
+### Free one-click deploy to Render
+
+This repo ships a [`render.yaml`](./render.yaml) blueprint that provisions the backend
+(+ static frontend), a free PostgreSQL database, and a free Redis (Key Value) instance,
+all wired together automatically.
+
+1. Push this repo to GitHub.
+2. In the [Render dashboard](https://dashboard.render.com): **New → Blueprint**, select the repo.
+3. Render reads `render.yaml`, creates all three resources, and links their connection details.
+4. When prompted, set the `sync: false` secrets — at minimum `ADMIN_PASSWORD`
+   (and optionally Google/PayPal credentials). `JWT_SECRET` is generated for you.
+5. Wait for the build; the app is served at `https://<your-service>.onrender.com`.
+
+**Free-tier caveats:** the web service sleeps after ~15 min idle (cold start on next
+request); the free Postgres instance expires ~30 days after creation; the filesystem is
+ephemeral, so uploaded files don't survive restarts (attach a disk or object storage for
+durability).
+
+### Self-hosted with Docker
+
+A full `docker-compose.yml` (app + Postgres + Redis) is included. See [`DOCKER.md`](./DOCKER.md):
+
+```bash
+cp .env.example .env   # edit secrets
+docker compose up -d
+```
+
 ---
 
 ## API Reference

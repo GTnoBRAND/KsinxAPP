@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.jwt.AuthEntryPointJwt;
 import org.jas.ksinxapp.jwt.AuthTokenFilter;
 import org.jas.ksinxapp.oauth2.OAuth2SuccessHandler;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,17 +49,25 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            ObjectProvider<ClientRegistrationRepository> clientRegistrationRepository) throws Exception {
+        http
                 .csrf(AbstractHttpConfigurer::disable)
                 // Sessions needed for the OAuth2 state parameter exchange; JWT endpoints are stateless
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .oauth2Login(oauth -> oauth
-                        .successHandler(oAuth2SuccessHandler)
-                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
+
+        // OAuth2 login is only wired up when a provider is actually configured
+        // (e.g. GOOGLE_CLIENT_ID/SECRET are set). Otherwise the app runs JWT-only.
+        if (clientRegistrationRepository.getIfAvailable() != null) {
+            http.oauth2Login(oauth -> oauth.successHandler(oAuth2SuccessHandler));
+        }
+
+        return http
                 .exceptionHandling(e -> e.authenticationEntryPoint(authEntryPointJwt))
                 .authorizeHttpRequests(auth -> auth
-                        // Static frontend
+                        // Health check (used by Render/Docker) + static frontend
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/", "/*.html", "/css/**", "/js/**", "/img/**").permitAll()
                         // OAuth2 authorization redirect (Spring Security's own endpoint)
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()

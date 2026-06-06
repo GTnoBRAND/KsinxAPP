@@ -35,8 +35,8 @@ docker compose up -d
 open http://localhost:8080
 ```
 
-The first boot auto-creates the schema (`DDL_AUTO=update`) and bootstraps an
-admin user from `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+On first boot, **Flyway** applies the baseline migration to create the schema, then
+the app bootstraps an admin user from `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
 ## Build from source
 
@@ -102,6 +102,8 @@ or a different port, you'll want to refactor those to read from a
 
 ### Schema management
 
-Default `DDL_AUTO=update` is intended for "first boot on a fresh DB". Once
-your schema is stable in production-like environments, switch to `validate`
-in `.env` and rely on real migration tooling (Flyway / Liquibase).
+The schema is managed by **Flyway** (migrations in `src/main/resources/db/migration`),
+and Hibernate runs in `validate` mode (`DDL_AUTO=validate`). On a fresh database Flyway
+applies the baseline; on a database previously created by `ddl-auto`, Flyway baselines it
+in place (`spring.flyway.baseline-on-migrate=true`). To evolve the schema, add a new
+`V2__*.sql` migration. You can still override `DDL_AUTO` in `.env` for experiments.

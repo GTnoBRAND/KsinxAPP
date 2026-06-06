@@ -1,0 +1,95 @@
+# Render Blueprint for LutorLMS — deploys the backend + static frontend, a free
+# PostgreSQL database, and a free Key Value (Redis) instance from this repo.
+#
+# How to deploy:
+#   1. Push this repo to GitHub.
+#   2. In the Render dashboard: New > Blueprint, pick this repo.
+#   3. Render reads this file, provisions all three resources, and links them.
+#   4. Set the secret env vars marked `sync: false` when prompted (admin password,
+#      and optionally Google/PayPal credentials).
+#
+# Free-tier caveats:
+#   - The web service sleeps after ~15 min idle and cold-starts on the next request.
+#   - The free PostgreSQL instance expires ~30 days after creation; recreate it (or
+#     attach a paid/managed DB such as Neon) to keep data long-term.
+#   - The container filesystem is ephemeral, so uploaded files do not survive restarts.
+
+databases:
+  - name: lutorlms-db
+    plan: free
+    databaseName: lutorlms
+    user: lutorlms
+
+services:
+  # Redis-compatible cache (Render Key Value)
+  - type: keyvalue
+    name: lutorlms-kv
+    plan: free
+    ipAllowList: []   # empty list = reachable only from your Render services (no public access)
+
+  # Backend API + static frontend (built from the Dockerfile)
+  - type: web
+    name: lutorlms
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      # ── Database (assembled into the JDBC URL by application.properties) ──
+      - key: DB_HOST
+        fromDatabase:
+          name: lutorlms-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: lutorlms-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: lutorlms-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: lutorlms-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: lutorlms-db
+          property: password
+
+      # ── Redis / Key Value ──
+      - key: REDIS_HOST
+        fromService:
+          type: keyvalue
+          name: lutorlms-kv
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: keyvalue
+          name: lutorlms-kv
+          property: port
+
+      # ── Secrets ──
+      - key: JWT_SECRET
+        generateValue: true        # Render generates a stable random value once
+      - key: ADMIN_EMAIL
+        value: admin@lutorlms.app
+      - key: ADMIN_PASSWORD
+        sync: false                # set this in the dashboard (not stored in the repo)
+
+      # ── Optional integrations — fill in via the dashboard to enable ──
+      - key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID
+        sync: false
+      - key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_MODE
+        value: sandbox
+
+      # ── JVM sizing for the free 512MB instance ──
+      - key: JAVA_OPTS
+        value: -XX:MaxRAMPercentage=75

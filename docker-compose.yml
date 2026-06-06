@@ -49,17 +49,20 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-lutorlms}
       REDIS_HOST:  redis
       REDIS_PORT:  6379
-      # Spring Boot translates this env name to spring.jpa.hibernate.ddl-auto
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${DDL_AUTO:-update}
-      # ── App secrets (override via .env) ────────────────────
-      JWT_SECRET:          ${JWT_SECRET:-Vm6f+68svJGzvIToFGMzKnhS0kJaxrO3P4ZnucHfN8Q=}
-      ADMIN_EMAIL:         ${ADMIN_EMAIL:-admin@lms.com}
-      ADMIN_PASSWORD:      ${ADMIN_PASSWORD:-administrator1}
-      GOOGLE_CLIENT_ID:    ${GOOGLE_CLIENT_ID:-503251107122-fdi6hbnj2miao9ote08kp1kb7ruubdh8.apps.googleusercontent.com}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-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}
-      PAYPAL_CLIENT_ID:    ${PAYPAL_CLIENT_ID:-ASEYI-QeTZzrlScvGMrmv_mavMn13iYjnI-k6OOtJsGWi6N_UQbX09g7Koz5UWN3LlPR9-wxEBJxIl46}
-      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-EFOP3wRnVhmCX9jKip7jqfMCqoS8Wgb1EndYuIzNT2k5BVPU942ycUHq8G7TIbnTTftrBqMug4JCeMKC}
+      # Schema is owned by Flyway; Hibernate only validates. Override with DDL_AUTO if needed.
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${DDL_AUTO:-validate}
+      # ── App secrets (set these in .env — no defaults are baked in) ──
+      # If JWT_SECRET is empty the app generates an ephemeral key (tokens reset on restart).
+      JWT_SECRET:          ${JWT_SECRET:-}
+      ADMIN_EMAIL:         ${ADMIN_EMAIL:-admin@lutorlms.local}
+      ADMIN_PASSWORD:      ${ADMIN_PASSWORD:-AdminChangeMe123}
+      # ── Optional PayPal (empty = payment endpoints disabled) ──
+      PAYPAL_CLIENT_ID:    ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
       PAYPAL_MODE:         ${PAYPAL_MODE:-sandbox}
+      # ── Optional Google OAuth: uncomment and set both to enable social login ──
+      # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID:     ${GOOGLE_CLIENT_ID}
+      # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       JAVA_OPTS:           ${JAVA_OPTS:--Xms256m -Xmx768m}
     ports:
       - "${APP_PORT:-8080}:8080"
