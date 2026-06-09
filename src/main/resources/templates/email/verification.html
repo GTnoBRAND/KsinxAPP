@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify your email</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f7; padding:40px 0;">
+    <tr>
+        <td align="center">
+            <table width="560" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-radius:8px; padding:40px;">
+                <tr>
+                    <td>
+                        <h1 style="margin:0 0 24px 0; color:#1a1a1a; font-size:24px;">Welcome to LutorLMS</h1>
+                        <p style="margin:0 0 16px 0; color:#4a4a4a; font-size:16px; line-height:1.5;">
+                            Hi <span th:text="${recipientName}">there</span>,
+                        </p>
+                        <p style="margin:0 0 24px 0; color:#4a4a4a; font-size:16px; line-height:1.5;">
+                            Thanks for signing up. Please confirm your email address by clicking the button below.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+                            <tr>
+                                <td style="background-color:#2563eb; border-radius:6px;">
+                                    <a th:href="${verificationLink}"
+                                       style="display:inline-block; padding:14px 28px; color:#ffffff; text-decoration:none; font-size:16px; font-weight:600;">
+                                        Verify email
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                        <p style="margin:0 0 8px 0; color:#6a6a6a; font-size:14px; line-height:1.5;">
+                            If the button doesn't work, paste this link into your browser:
+                        </p>
+                        <p style="margin:0 0 24px 0; color:#2563eb; font-size:13px; word-break:break-all;">
+                            <a th:href="${verificationLink}" th:text="${verificationLink}" style="color:#2563eb;">link</a>
+                        </p>
+                        <p style="margin:0; color:#9a9a9a; font-size:13px; line-height:1.5;">
+                            This link expires in <span th:text="${expiryHours}">24</span> hours.
+                            If you didn't sign up for LutorLMS, you can safely ignore this email.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <p style="margin:24px 0 0 0; color:#9a9a9a; font-size:12px;">
+                &copy; <span th:text="${year}">2026</span> LutorLMS
+            </p>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,12 @@
+Welcome to LutorLMS
+
+Hi [(${recipientName})],
+
+Thanks for signing up. Please confirm your email address by visiting this link:
+
+[(${verificationLink})]
+
+This link expires in [(${expiryHours})] hours.
+If you didn't sign up for LutorLMS, you can safely ignore this email.
+
+— LutorLMS

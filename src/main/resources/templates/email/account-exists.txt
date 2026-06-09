@@ -1,0 +1,10 @@
+Someone tried to sign up with your email
+
+We received a registration request for your email address on LutorLMS. You already have an account with us.
+
+If this was you, log in: [(${loginLink})]
+If you forgot your password, reset it: [(${passwordResetLink})]
+
+If this wasn't you, you can safely ignore this email — no account changes were made.
+
+— LutorLMS

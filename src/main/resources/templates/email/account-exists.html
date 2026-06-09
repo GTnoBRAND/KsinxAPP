@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Account exists</title></head>
+<body style="margin:0; padding:0; background-color:#f4f4f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f7; padding:40px 0;">
+    <tr><td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-radius:8px; padding:40px;">
+            <tr><td>
+                <h1 style="margin:0 0 24px 0; color:#1a1a1a; font-size:24px;">Someone tried to sign up with your email</h1>
+                <p style="margin:0 0 16px 0; color:#4a4a4a; font-size:16px; line-height:1.5;">
+                    We received a registration request for your email address on LutorLMS. You already have an account with us.
+                </p>
+                <p style="margin:0 0 16px 0; color:#4a4a4a; font-size:16px; line-height:1.5;">
+                    If this was you, you can <a th:href="${loginLink}" style="color:#2563eb;">log in here</a>. If you forgot your password, <a th:href="${passwordResetLink}" style="color:#2563eb;">reset it</a>.
+                </p>
+                <p style="margin:0; color:#9a9a9a; font-size:13px; line-height:1.5;">
+                    If this wasn't you, you can safely ignore this email — no account changes were made.
+                </p>
+            </td></tr>
+        </table>
+    </td></tr>
+</table>
+</body>
+</html>
