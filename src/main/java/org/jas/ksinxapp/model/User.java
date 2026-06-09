@@ -1,17 +1,15 @@
 package org.jas.ksinxapp.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.stereotype.Component;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.util.List;
 
-@Setter
-@Getter
 @Entity
 @Table(name = "users")
+@Data
 public class User{
 
     @Id
@@ -34,6 +32,8 @@ public class User{
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
     private List<Enrollment> enrollments;
 
+    private boolean enabled;
+
 
     public enum  Role {
         ADMIN,
@@ -45,25 +45,13 @@ public class User{
     public User() {
     }
 
-    public User(Long id, String email, String fullName, Role role, String password , List<Enrollment> enrollments) {
+    public User(Long id, String email, String fullName, Role role, String password , List<Enrollment> enrollments, boolean enabled) {
         this.id = id;
         this.email = email;
         this.fullName = fullName;
         this.role = role;
         this.password = password;
         this.enrollments = enrollments;
-    }
-
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                ", fullName='" + fullName + '\'' +
-                ", role=" + role +
-                ", password=" + password +
-                ", enrollments=" + enrollments +
-                '}';
+        this.enabled = enabled;
     }
 }

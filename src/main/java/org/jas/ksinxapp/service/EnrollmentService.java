@@ -3,6 +3,7 @@ package org.jas.ksinxapp.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.dtos.CourseProgressResponse;
+import org.jas.ksinxapp.dtos.CourseResponse;
 import org.jas.ksinxapp.dtos.EnrollmentRequest;
 import org.jas.ksinxapp.dtos.EnrollmentResponse;
 import org.jas.ksinxapp.mappers.EnrollmentMapper;
@@ -80,7 +81,7 @@ public class EnrollmentService {
         UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
         Long userId = principal.getUser().getId();
 
-        return enrollmentRepo.findByStudentId(userId)
+        return enrollmentRepo.findByStudentIdAndIsActiveTrue(userId)
                 .stream()
                 .map(enrollment -> {
                     Long courseId = enrollment.getCourse().getId();

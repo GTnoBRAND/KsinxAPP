@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface EnrollmentRepo extends JpaRepository<Enrollment,Long> {
     boolean existsByStudentIdAndCourseIdAndIsActiveTrue(Long id, Long id1);
-    List<Enrollment> findByStudentId(Long studentId);
+    List<Enrollment> findByStudentIdAndIsActiveTrue(Long studentId);
 }

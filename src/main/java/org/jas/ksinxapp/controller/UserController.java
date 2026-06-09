@@ -1,15 +1,13 @@
 package org.jas.ksinxapp.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.jas.ksinxapp.dtos.LoginRequest;
-import org.jas.ksinxapp.dtos.LoginResponse;
-import org.jas.ksinxapp.dtos.RoleUpdateRequest;
-import org.jas.ksinxapp.dtos.StudentRegistrationRequest;
-import org.jas.ksinxapp.dtos.StudentResponse;
+import org.jas.ksinxapp.RateLimit.RegistrationRateLimiter;
+import org.jas.ksinxapp.dtos.*;
 import org.jas.ksinxapp.jwt.JwtService;
 import org.jas.ksinxapp.model.User;
-import org.jas.ksinxapp.repo.UserRepo;
+import org.jas.ksinxapp.model.VerificationResult;
 import org.jas.ksinxapp.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,11 +26,19 @@ public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
-    private final UserRepo repo;
+    private final RegistrationRateLimiter rateLimiter;
 
     //post request to register the user
     @PostMapping("/register")
-    public ResponseEntity<StudentResponse> register(@Valid @RequestBody StudentRegistrationRequest request){
+    public ResponseEntity<StudentResponse> register(@Valid @RequestBody StudentRegistrationRequest request, HttpServletRequest http){
+
+        String ip = http.getRemoteAddr();
+        if(!rateLimiter.tryAcquire( ip, 10)){
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+        if(!rateLimiter.tryAcquire(request.email(), 3)){
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
 
         StudentResponse response = userService.registerStudent(request);
 
@@ -40,7 +46,6 @@ public class UserController {
     }
 
     @PutMapping("/update/{id}")
-    @PreAuthorize("hasAllRoles('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<StudentResponse> update(@PathVariable Long id ,@Valid @RequestBody StudentRegistrationRequest request){
         return  ResponseEntity.status(HttpStatus.CREATED).body(userService.updateStudent(id,request));
     }
@@ -95,4 +100,32 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/verify")
+    public ResponseEntity<Map<String, String>> verify(@RequestParam String token){
+        VerificationResult result = userService.verify(token);
+        return switch (result){
+            case SUCCESS -> ResponseEntity.ok(Map.of("Message", "Email verified. You can login now."));
+            case ALREADY_VERIFIED -> ResponseEntity.ok(Map.of("Message", "Email already verified."));
+            case EXPIRED -> ResponseEntity.status(HttpStatus.GONE).body(Map.of("Message", "Link expired. Request a new one!"));
+            case INVALID -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("Message", "Invalid token."));
+        };
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Map<String, String>> resend(
+            @Valid @RequestBody ResendVerificationRequest request,
+            HttpServletRequest http) {
+
+        String ip = http.getRemoteAddr();
+        if (!rateLimiter.tryAcquire("resend:ip:" + ip, 5)) {            // 5 per hour per IP
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+        if (!rateLimiter.tryAcquire("resend:email:" + request.email(), 3)) {  // 3 per hour per email
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+
+        userService.resendVerification(request.email());
+        return ResponseEntity.accepted()
+                .body(Map.of("Message", "If an account exists for this email, verification has been sent"));
+    }
 }

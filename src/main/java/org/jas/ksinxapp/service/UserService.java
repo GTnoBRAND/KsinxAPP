@@ -11,19 +11,24 @@ import org.jas.ksinxapp.jwt.JwtService;
 import org.jas.ksinxapp.mappers.LoginMapper;
 import org.jas.ksinxapp.mappers.UserMapper;
 import org.jas.ksinxapp.model.User;
+import org.jas.ksinxapp.model.VerificationResult;
+import org.jas.ksinxapp.model.VerificationToken;
 import org.jas.ksinxapp.repo.UserRepo;
-import org.jas.ksinxapp.security.SecurityConfig;
+import org.jas.ksinxapp.repo.VerificationTokenRepository;
 import org.jas.ksinxapp.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,13 +42,15 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder  passwordEncoder;
     private final JwtService  jwtService;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final EmailService emailService;
 
     @Transactional
     public StudentResponse registerStudent(StudentRegistrationRequest request) {
 
         //check if the email is already taken
         if(userRepo.existsByEmail(request.email())){
-            throw new RuntimeException("An account with that email already exists");
+            emailService.sendAccountExistingEmail(request.email());
         }
 
         //map the basic fields
@@ -54,6 +61,8 @@ public class UserService {
 
         //replace with Bcrypt later
         newUser.setPassword(passwordEncoder.encode(request.password()));
+
+        issueVerificationToken(newUser);
 
         //save to postgresql
         User savedUser = userRepo.save(newUser);
@@ -72,13 +81,13 @@ public class UserService {
                         request.password()
                 )
         );
-
+        
         //if we reach here authentication was successful
         //get the principal and cast it to your custom class
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
         //GENERATE THE TOKEN HERE
-        // Use the username (fullName) from the principal to create the ticket
+        // Use the email from the principal to create the ticket
         assert principal != null;
         String token = jwtService.generateToken(principal.getUser().getRole(), principal.getUser().getEmail());
 
@@ -145,5 +154,57 @@ public class UserService {
 
         user.setRole(role);
         return userMapper.toResponse(user);
+    }
+
+
+    public void issueVerificationToken(User user){
+        verificationTokenRepository.deleteByUser(user); //delete old token if any
+
+
+        String token = UUID.randomUUID().toString();
+        VerificationToken vt = new VerificationToken();
+        vt.setToken(token);
+        vt.setUser(user);
+        vt.setExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
+        verificationTokenRepository.save(vt);
+
+        emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), token);
+    }
+
+
+    @Transactional
+    public VerificationResult verify(String token){
+        Optional<VerificationToken> maybe = verificationTokenRepository.findByToken(token);
+
+        if(maybe.isEmpty()){
+            return VerificationResult.INVALID;
+        }
+
+        VerificationToken vt = maybe.get();
+        User user = vt.getUser();
+
+        //already verified, but they clicked the link again
+        if(user.isEnabled()){
+            verificationTokenRepository.delete(vt);
+            return VerificationResult.ALREADY_VERIFIED;
+        }
+
+        if(vt.isExpired()){
+            verificationTokenRepository.delete(vt);
+            return VerificationResult.EXPIRED;
+        }
+
+        user.setEnabled(true);
+        userRepo.save(user);
+        verificationTokenRepository.save(vt);
+        return VerificationResult.SUCCESS;
+    }
+
+    @Transactional
+    public void resendVerification(String email){
+        // Silent on whether the email exists or is already verified
+        userRepo.findByEmail(email)
+                .filter(u->!u.isEnabled())
+                .ifPresent(this::issueVerificationToken);
     }
 }
