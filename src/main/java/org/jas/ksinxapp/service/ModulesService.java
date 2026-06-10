@@ -1,5 +1,6 @@
 package org.jas.ksinxapp.service;
 
+import lombok.RequiredArgsConstructor;
 import org.jas.ksinxapp.dtos.ModulesRequest;
 import org.jas.ksinxapp.dtos.ModulesResponse;
 import org.jas.ksinxapp.mappers.ModulesMapper;
@@ -14,17 +15,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ModulesService {
 
     private final ModulesRepo modulesRepo;
     private final ModulesMapper modulesMapper;
     private final CourseRepo courseRepo;
 
-    public ModulesService(ModulesRepo modulesRepo, ModulesMapper modulesMapper, CourseRepo courseRepo) {
-        this.modulesRepo = modulesRepo;
-        this.modulesMapper = modulesMapper;
-        this.courseRepo = courseRepo;
-    }
     @Transactional
     //create a new lesson in a course
     public ModulesResponse createModule(ModulesRequest request) {

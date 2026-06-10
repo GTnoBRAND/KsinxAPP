@@ -52,8 +52,8 @@ public class PaymentService {
                         new OrderApplicationContext.Builder()
                                 .brandName("LutorLMS")
                                 .userAction(OrderApplicationContextUserAction.PAY_NOW)
-                                .returnUrl("http://localhost:8080/api/v1/payments/return")
-                                .cancelUrl("http://localhost:8080/api/v1/payments/cancel")
+                                .returnUrl("https://lutorlms.com/api/v1/payments/return")
+                                .cancelUrl("https://lutorlms.com/api/v1/payments/cancel")
                                 .build()
                 )
                 .build();
