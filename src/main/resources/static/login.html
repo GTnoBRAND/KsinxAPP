@@ -91,7 +91,13 @@
         else window.location.href = '/dashboard.html';
       }, 600);
     }).catch(function(err) {
-      errBox.textContent = err.message || 'Invalid credentials. Please try again.';
+      var msg = err.message || 'Invalid credentials. Please try again.';
+      errBox.innerHTML = msg.replace(/[<>&]/g, function(c) {
+        return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c];
+      });
+      if (/verify your email/i.test(msg)) {
+        errBox.innerHTML += ' <a href="/register.html" style="color:inherit;text-decoration:underline;font-weight:600">Resend link</a>';
+      }
       errBox.style.display = 'block';
       UI.setLoading(btn, false);
     });

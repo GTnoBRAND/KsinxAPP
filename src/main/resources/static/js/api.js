@@ -36,6 +36,8 @@ window.api = (function () {
     auth: {
       login:      function (b) { return request('POST', '/v1/users/login', b); },
       register:   function (b) { return request('POST', '/v1/users/register', b); },
+      verify:     function (token) { return request('GET',  '/v1/users/verify?token=' + encodeURIComponent(token)); },
+      resendVerification: function (email) { return request('POST', '/v1/users/resend-verification', { email: email }); },
       allUsers:   function ()  { return request('GET',  '/v1/users/all'); },
       deleteUser: function (id){ return request('DELETE', '/v1/users/delete/' + id); },
       updateUser: function (id, b){ return request('PUT', '/v1/users/update/' + id, b); },

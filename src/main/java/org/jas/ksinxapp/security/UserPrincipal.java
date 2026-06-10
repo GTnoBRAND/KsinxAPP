@@ -34,4 +34,9 @@ public class UserPrincipal implements UserDetails {
         return user.getFullName();
     }
 
+    @Override
+    public boolean isEnabled() {
+        return user.isEnabled();
+    }
+
 }

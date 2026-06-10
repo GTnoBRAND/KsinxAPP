@@ -45,7 +45,7 @@ public class EmailService {
 
     @Async
     public void sendVerificationEmail(String to, String recipientName, String token){
-        String link = baseUrl + "/auth/verify?token=" + token;
+        String link = baseUrl + "/verify-email?token=" + token;
 
         Context context = new Context();
         context.setVariable("recipientName", recipientName != null ? recipientName : "there");

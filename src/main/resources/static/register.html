@@ -21,7 +21,7 @@
 
 <main class="auth-page">
   <div class="bg-glow"></div>
-  <div class="auth-card">
+  <div class="auth-card" id="register-view">
     <div class="auth-logo"><div class="logo-dot"></div>LutorLMS</div>
     <h1 class="auth-title">Create your account</h1>
     <p class="auth-subtitle">Start learning for free — no credit card required</p>
@@ -62,6 +62,24 @@
       Already have an account? <a href="/login.html">Log in</a>
     </div>
   </div>
+
+  <div class="auth-card" id="verify-view" style="display:none;text-align:center">
+    <div class="auth-logo"><div class="logo-dot"></div>LutorLMS</div>
+    <div style="font-size:48px;margin:8px 0 16px">📬</div>
+    <h1 class="auth-title">Please verify your account</h1>
+    <p class="auth-subtitle">
+      We've sent a verification link to <strong id="verify-email"></strong>.
+      Open it and click the button inside to activate your account.
+    </p>
+    <div style="background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.3);border-radius:8px;padding:12px 14px;font-size:.85rem;color:var(--text);margin:16px 0 20px;text-align:left">
+      Once you've clicked the link in your email, come back here and press the button below to log in.
+    </div>
+    <button type="button" class="btn btn-primary form-submit" id="verified-btn">I've verified — go to login</button>
+    <div id="resend-msg" style="margin-top:14px;font-size:.85rem;color:var(--text-muted);display:none"></div>
+    <div class="auth-footer" style="margin-top:18px">
+      Didn't get the email? <a href="#" id="resend-link">Resend verification</a>
+    </div>
+  </div>
 </main>
 
 <script src="/js/api.js"></script>
@@ -98,13 +116,32 @@
 
     UI.setLoading(btn, true);
     api.auth.register({ fullName: fullName, email: email, password: password }).then(function() {
-      succBox.textContent = 'Account created! Redirecting to login…';
-      succBox.style.display = 'block';
-      setTimeout(function() { window.location.href = '/login.html'; }, 1500);
+      document.getElementById('register-view').style.display = 'none';
+      var verifyView = document.getElementById('verify-view');
+      document.getElementById('verify-email').textContent = email;
+      verifyView.style.display = 'block';
+      verifyView.dataset.email = email;
     }).catch(function(err) {
       errBox.textContent = err.message || 'Registration failed. Please try again.';
       errBox.style.display = 'block';
       UI.setLoading(btn, false);
+    });
+  });
+
+  document.getElementById('verified-btn').addEventListener('click', function() {
+    window.location.href = '/login.html';
+  });
+
+  document.getElementById('resend-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    var email = document.getElementById('verify-view').dataset.email;
+    var msg = document.getElementById('resend-msg');
+    msg.style.display = 'block';
+    msg.textContent = 'Sending…';
+    api.auth.resendVerification(email).then(function() {
+      msg.textContent = 'If an account exists for that email, a new verification link was sent.';
+    }).catch(function(err) {
+      msg.textContent = err.message || 'Could not resend right now. Try again in a moment.';
     });
   });
 </script>

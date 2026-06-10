@@ -30,7 +30,8 @@ public class UserController {
 
     //post request to register the user
     @PostMapping("/register")
-    public ResponseEntity<StudentResponse> register(@Valid @RequestBody StudentRegistrationRequest request, HttpServletRequest http){
+    public ResponseEntity<StudentResponse> register(@Valid @RequestBody StudentRegistrationRequest request,
+                                                    HttpServletRequest http){
 
         String ip = http.getRemoteAddr();
         if(!rateLimiter.tryAcquire( ip, 10)){

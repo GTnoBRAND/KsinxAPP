@@ -97,14 +97,7 @@ create table if not exists subscriptions (
     version bigint,
     primary key (id)
 );
-CREATE TABLE verification_tokens (
-                                     id          BIGSERIAL PRIMARY KEY,
-                                     token       VARCHAR(64) NOT NULL UNIQUE,
-                                     user_id     BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-                                     expires_at  TIMESTAMPTZ NOT NULL
-);
 
-CREATE INDEX idx_verification_tokens_token ON verification_tokens(token);
 -- Foreign keys (added only if absent, so re-runs / adopted schemas don't error).
 do $$ begin
     if not exists (select 1 from pg_constraint where conname = 'fk7ofybdo2o0ngc4de3uvx4dxqv') then

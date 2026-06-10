@@ -48,9 +48,11 @@ public class UserService {
     @Transactional
     public StudentResponse registerStudent(StudentRegistrationRequest request) {
 
-        //check if the email is already taken
+        //check if the email is already taken — notify the existing owner and return
+        //a benign response so we don't leak which emails are registered
         if(userRepo.existsByEmail(request.email())){
             emailService.sendAccountExistingEmail(request.email());
+            return new StudentResponse(null, request.email(), request.fullName(), User.Role.STUDENT.name());
         }
 
         //map the basic fields
@@ -62,10 +64,10 @@ public class UserService {
         //replace with Bcrypt later
         newUser.setPassword(passwordEncoder.encode(request.password()));
 
-        issueVerificationToken(newUser);
-
         //save to postgresql
         User savedUser = userRepo.save(newUser);
+
+        issueVerificationToken(newUser);
 
         //return dto response
         return userMapper.toResponse(savedUser);
@@ -75,13 +77,22 @@ public class UserService {
     public LoginResponse login(LoginRequest request) {
         //Authenticates the user
         //triggers userDetailService and compares passwords using encoder
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()
-                )
-        );
-        
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.email(),
+                            request.password()
+                    )
+            );
+        } catch (org.springframework.security.authentication.DisabledException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Please verify your email before logging in.");
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Invalid email or password.");
+        }
+
         //if we reach here authentication was successful
         //get the principal and cast it to your custom class
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();

@@ -75,6 +75,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/course/all", "/api/course/find/**",
                                 "/api/v1/users/register", "/api/v1/users/login",
+                                "/api/v1/users/verify", "/api/v1/users/resend-verification",
                                 "/api/v1/modules/course/**"
                         ).permitAll()
                         // Role-based
