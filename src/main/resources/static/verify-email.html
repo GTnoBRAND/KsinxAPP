@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Email — LutorLMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/index.html" class="navbar-brand"><div class="logo-dot"></div>LutorLMS</a>
+  <div></div>
+  <div>
+    <a href="/login.html" class="btn btn-outline btn-sm">Log In</a>
+  </div>
+</nav>
+
+<main class="auth-page">
+  <div class="bg-glow"></div>
+  <div class="auth-card" style="text-align:center">
+    <div class="auth-logo"><div class="logo-dot"></div>LutorLMS</div>
+
+    <div id="state-loading">
+      <div style="font-size:48px;margin:8px 0 16px">⏳</div>
+      <h1 class="auth-title">Verifying your email…</h1>
+      <p class="auth-subtitle">Hang tight, this only takes a second.</p>
+    </div>
+
+    <div id="state-success" style="display:none">
+      <div style="font-size:48px;margin:8px 0 16px">✅</div>
+      <h1 class="auth-title">Email verified!</h1>
+      <p class="auth-subtitle" id="success-msg">Your account is active. You can log in now.</p>
+      <a href="/login.html" class="btn btn-primary form-submit" style="margin-top:16px">Go to login</a>
+    </div>
+
+    <div id="state-error" style="display:none">
+      <div style="font-size:48px;margin:8px 0 16px">⚠️</div>
+      <h1 class="auth-title" id="error-title">Verification failed</h1>
+      <p class="auth-subtitle" id="error-msg">The link is invalid or expired.</p>
+      <a href="/login.html" class="btn btn-outline form-submit" style="margin-top:16px">Back to login</a>
+    </div>
+  </div>
+</main>
+
+<script src="/js/api.js"></script>
+<script>
+  function showState(id) {
+    ['state-loading','state-success','state-error'].forEach(function(s) {
+      document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
+    });
+  }
+
+  var token = new URLSearchParams(window.location.search).get('token');
+  if (!token) {
+    document.getElementById('error-title').textContent = 'Missing token';
+    document.getElementById('error-msg').textContent = 'This verification link is incomplete.';
+    showState('state-error');
+  } else {
+    api.auth.verify(token).then(function(res) {
+      var msg = (res && (res.Message || res.message)) || 'Your account is active. You can log in now.';
+      document.getElementById('success-msg').textContent = msg;
+      showState('state-success');
+    }).catch(function(err) {
+      var raw = err && err.message ? err.message : '';
+      if (raw.indexOf('expired') !== -1 || raw.indexOf('Link expired') !== -1) {
+        document.getElementById('error-title').textContent = 'Link expired';
+        document.getElementById('error-msg').textContent = 'This verification link has expired. Please request a new one from the sign-up page.';
+      } else if (raw.indexOf('Invalid') !== -1) {
+        document.getElementById('error-title').textContent = 'Invalid link';
+        document.getElementById('error-msg').textContent = 'We could not find that verification token.';
+      } else {
+        document.getElementById('error-msg').textContent = raw || 'Something went wrong verifying your email.';
+      }
+      showState('state-error');
+    });
+  }
+</script>
+</body>
+</html>
