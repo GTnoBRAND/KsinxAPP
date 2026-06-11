@@ -11,11 +11,13 @@ import org.jas.ksinxapp.jwt.JwtService;
 import org.jas.ksinxapp.mappers.LoginMapper;
 import org.jas.ksinxapp.mappers.UserMapper;
 import org.jas.ksinxapp.model.User;
+import org.jas.ksinxapp.model.UserRegisteredEvent;
 import org.jas.ksinxapp.model.VerificationResult;
 import org.jas.ksinxapp.model.VerificationToken;
 import org.jas.ksinxapp.repo.UserRepo;
 import org.jas.ksinxapp.repo.VerificationTokenRepository;
 import org.jas.ksinxapp.security.UserPrincipal;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,6 +46,7 @@ public class UserService {
     private final JwtService  jwtService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
     
 
     @Transactional
@@ -180,7 +183,11 @@ public class UserService {
         vt.setExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
         verificationTokenRepository.save(vt);
 
-        emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), token);
+//        emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), token);
+        //publish the event with ApplicationEventPublisher(the listener sends the email only if the transaction is commited)
+        eventPublisher.publishEvent(
+                new UserRegisteredEvent(user.getEmail(), user.getFullName(), vt.getToken())
+        );
     }
 
 
