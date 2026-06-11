@@ -12,10 +12,10 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class RegistrationRateLimiter {
 
-    public final StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     public boolean tryAcquire(String key, int maxPerHour){
-        String redisKey = "rateLimit:register"+ key;
+        String redisKey = "rateLimit: "+ key;
         Long count = redisTemplate.opsForValue().increment(redisKey);
         if(count != null &&  count==1L){
             redisTemplate.expire(redisKey, Duration.ofHours(1));

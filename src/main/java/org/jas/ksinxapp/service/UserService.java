@@ -44,6 +44,7 @@ public class UserService {
     private final JwtService  jwtService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final EmailService emailService;
+    
 
     @Transactional
     public StudentResponse registerStudent(StudentRegistrationRequest request) {
