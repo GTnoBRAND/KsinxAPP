@@ -2,6 +2,7 @@ package org.jas.ksinxapp.email;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -12,6 +13,7 @@ import java.util.Set;
 
 @Configuration
 @EnableScheduling
+@EnableAsync
 public class EmailTemplateConfig {
 
     @Bean

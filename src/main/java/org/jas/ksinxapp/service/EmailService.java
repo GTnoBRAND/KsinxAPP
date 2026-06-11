@@ -43,7 +43,6 @@ public class EmailService {
         this.expiryHours = expiryHours;
     }
 
-    @Async
     public void sendVerificationEmail(String to, String recipientName, String token){
         String link = baseUrl + "/verify-email?token=" + token;
 
