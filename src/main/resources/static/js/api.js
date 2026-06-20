@@ -66,8 +66,16 @@ window.api = (function () {
       create:   function (b)   { return request('POST', '/v1/tasks', b); },
     },
     submissions: {
-      submit:   function (b)        { return request('POST', '/v1/submission/submit', b); },
+      // Backend uploads the file straight to MinIO's private bucket — just send the multipart form.
+      submit:   function (taskId, file) {
+        var fd = new FormData();
+        fd.append('taskId', taskId);
+        fd.append('file', file);
+        return request('POST', '/v1/submission/submit', fd);
+      },
       ungraded: function ()         { return request('GET',  '/v1/submission/ungraded'); },
+      // Returns a short-lived MinIO presigned URL for the submission file.
+      fileUrl:  function (id)       { return request('GET',  '/v1/submission/' + id + '/file'); },
       grade:    function (id, sc, fb){ return request('PUT', '/v1/submission/' + id + '/grade?score=' + sc + '&teacherFeedback=' + encodeURIComponent(fb)); },
     },
     payments: {
