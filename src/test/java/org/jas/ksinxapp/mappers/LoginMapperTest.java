@@ -26,7 +26,7 @@ class LoginMapperTest {
 
     @Test
     void loginResponse_combinesUserAndToken() {
-        var user = new User(7L, "ada@example.com", "Ada", User.Role.ADMIN, "hash", null);
+        var user = new User(7L, "ada@example.com", "Ada", User.Role.ADMIN, "hash", null, true);
 
         LoginResponse response = mapper.loginResponse(user, "abc.def.ghi");
 

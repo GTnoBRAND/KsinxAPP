@@ -8,7 +8,7 @@ public record TaskSubmissionResponse(
         String taskTitle,
         Long studentId,
         String studentFullName,
-        String fileUrl,
+        String fileKey,
         LocalDateTime submittedAt,
         Integer score,
         String teacherFeedback

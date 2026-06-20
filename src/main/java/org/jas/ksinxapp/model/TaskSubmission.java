@@ -59,7 +59,7 @@ public class TaskSubmission {
                 ", task=" + task +
                 ", student=" + student +
                 ", submittedAt=" + submittedAt +
-                ", fileUrl='" + fileKey + '\'' +
+                ", fileKey='" + fileKey + '\'' +
                 ", score=" + score +
                 ", teacherFeedback='" + teacherFeedback + '\'' +
                 '}';

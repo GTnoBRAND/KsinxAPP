@@ -306,7 +306,7 @@
             '<div>' +
               '<p style="font-weight:700;margin-bottom:4px">' + esc(s.taskTitle) + '</p>' +
               '<p style="font-size:.85rem;color:var(--text-muted)">by ' + esc(s.studentFullName) + ' · ' + fmtDate(s.submittedAt) + '</p>' +
-              '<a href="' + esc(s.fileUrl) + '" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:8px;padding-left:0;color:var(--accent)">📎 View Submission</a>' +
+              '<button class="btn btn-ghost btn-sm" style="margin-top:8px;padding-left:0;color:var(--accent)" onclick="viewSubmission(' + s.id + ')">📎 View Submission</button>' +
             '</div>' +
             '<button class="btn btn-primary btn-sm" onclick="openGrade(' + s.id + ',\'' + esc(s.studentFullName).replace(/'/g,"\\'") + '\',\'' + esc(s.taskTitle).replace(/'/g,"\\'") + '\',100)">Grade</button>' +
           '</div>' +
@@ -314,6 +314,16 @@
       }).join('');
     }).catch(function(e){ UI.renderEmpty(el,'😞','Failed to load submissions',e.message||''); });
   }
+
+  function viewSubmission(id) {
+    // The backend returns a short-lived presigned MinIO URL — open it in a new tab.
+    api.submissions.fileUrl(id).then(function(url) {
+      window.open(String(url), '_blank', 'noopener');
+    }).catch(function(e) {
+      UI.toast(e.message || 'Could not load submission file', 'error');
+    });
+  }
+  window.viewSubmission = viewSubmission;
 
   function openGrade(id, student, task, max) {
     currentGradeId = id;

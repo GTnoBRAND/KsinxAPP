@@ -28,7 +28,7 @@ class TaskSubmissionMapperTest {
                 .task(task)
                 .student(student)
                 .submittedAt(LocalDateTime.of(2026, 6, 5, 12, 0))
-                .fileUrl("/file.pdf")
+                .fileKey("submissions/abc123_file.pdf")
                 .score(85)
                 .teacherFeedback("good")
                 .build();
@@ -40,7 +40,7 @@ class TaskSubmissionMapperTest {
         assertThat(response.taskTitle()).isEqualTo("HW1");
         assertThat(response.studentId()).isEqualTo(20L);
         assertThat(response.studentFullName()).isEqualTo("Jane Doe");
-        assertThat(response.fileUrl()).isEqualTo("/file.pdf");
+        assertThat(response.fileKey()).isEqualTo("submissions/abc123_file.pdf");
         assertThat(response.score()).isEqualTo(85);
         assertThat(response.teacherFeedback()).isEqualTo("good");
     }

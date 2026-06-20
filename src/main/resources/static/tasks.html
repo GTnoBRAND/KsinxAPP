@@ -119,10 +119,7 @@
     UI.setLoading(btn, true);
     errEl.style.display = 'none';
 
-    api.files.upload(file).then(function(uploadRes) {
-      var fileUrl = (uploadRes && uploadRes.fileDownloadUri) ? uploadRes.fileDownloadUri : String(uploadRes);
-      return api.submissions.submit({ taskId: selectedTaskId, studentId: session.user.id, fileUrl: fileUrl });
-    }).then(function() {
+    api.submissions.submit(selectedTaskId, file).then(function() {
       UI.toast('Assignment submitted successfully!', 'success');
       UI.closeModal('submit-modal');
     }).catch(function(e) {

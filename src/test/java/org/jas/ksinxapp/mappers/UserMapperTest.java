@@ -27,7 +27,7 @@ class UserMapperTest {
 
     @Test
     void toResponse_mapsRoleAsString() {
-        var user = new User(7L, "ada@example.com", "Ada Lovelace", User.Role.TEACHER, "hash", null);
+        var user = new User(7L, "ada@example.com", "Ada Lovelace", User.Role.TEACHER, "hash", null, true);
 
         StudentResponse response = mapper.toResponse(user);
 
@@ -39,7 +39,7 @@ class UserMapperTest {
 
     @Test
     void updateEntityFromDto_replacesEditableFields() {
-        var user = new User(1L, "old@example.com", "Old Name", User.Role.STUDENT, "hash", null);
+        var user = new User(1L, "old@example.com", "Old Name", User.Role.STUDENT, "hash", null, true);
         var request = new StudentRegistrationRequest("New Name", "new@example.com", "ignored");
 
         mapper.updateEntityFromDto(request, user);
