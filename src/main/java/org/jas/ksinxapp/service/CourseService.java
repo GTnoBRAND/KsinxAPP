@@ -30,7 +30,7 @@ public class CourseService {
 
     private final CourseRepo courseRepo;
     private final CourseMapper courseMapper;
-    private final FileStorageService fileStorageService;
+    private final MinIoStorageService minIoStorageService;
     private final RedisTemplate<String, Course> redisTemplate;
     private final String CACHE_KEY_PREFIX = "product: ";
     private final long MANUAL_CACHE_TTL = 5;
@@ -43,10 +43,10 @@ public class CourseService {
 
         //store the cover photo and the teaser video, if provided
         if (image != null && !image.isEmpty()) {
-            course.setImageUrl(fileStorageService.storeFile(image));
+            course.setImageUrl(minIoStorageService.publicUpload(image));
         }
         if (video != null && !video.isEmpty()) {
-            course.setVideoUrl(fileStorageService.storeFile(video));
+            course.setVideoUrl(minIoStorageService.publicUpload(video));
         }
 
         //save to postgresql
@@ -76,7 +76,7 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
     @Cacheable(
-            value = "courseFromDb",
+            value = "course",
             key = "#id"
     )
     @Transactional
@@ -119,10 +119,10 @@ public class CourseService {
 
         //replace media only when a new file is uploaded; keep existing otherwise
         if (image != null && !image.isEmpty()) {
-            course.setImageUrl(fileStorageService.storeFile(image));
+            course.setImageUrl(minIoStorageService.publicUpload(image));
         }
         if (video != null && !video.isEmpty()) {
-            course.setVideoUrl(fileStorageService.storeFile(video));
+            course.setVideoUrl(minIoStorageService.publicUpload(video));
         }
 
         //invalidate the cache
