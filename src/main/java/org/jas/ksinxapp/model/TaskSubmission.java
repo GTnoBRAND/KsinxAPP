@@ -26,7 +26,7 @@ public class TaskSubmission {
     private LocalDateTime submittedAt;
 
     @Column(nullable = false)
-    private String fileUrl;
+    private String fileKey;
 
     private Integer score;
 
@@ -42,12 +42,12 @@ public class TaskSubmission {
     public TaskSubmission() {
     }
 
-    public TaskSubmission(Long id, Task task, User student, LocalDateTime submittedAt, String fileUrl, Integer score, String teacherFeedback) {
+    public TaskSubmission(Long id, Task task, User student, LocalDateTime submittedAt, String fileKey, Integer score, String teacherFeedback) {
         this.id = id;
         this.task = task;
         this.student = student;
         this.submittedAt = submittedAt;
-        this.fileUrl = fileUrl;
+        this.fileKey = fileKey;
         this.score = score;
         this.teacherFeedback = teacherFeedback;
     }
@@ -59,7 +59,7 @@ public class TaskSubmission {
                 ", task=" + task +
                 ", student=" + student +
                 ", submittedAt=" + submittedAt +
-                ", fileUrl='" + fileUrl + '\'' +
+                ", fileUrl='" + fileKey + '\'' +
                 ", score=" + score +
                 ", teacherFeedback='" + teacherFeedback + '\'' +
                 '}';

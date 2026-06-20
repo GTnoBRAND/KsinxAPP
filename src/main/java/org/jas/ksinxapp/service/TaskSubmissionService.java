@@ -1,7 +1,6 @@
 package org.jas.ksinxapp.service;
 
 import lombok.RequiredArgsConstructor;
-import org.jas.ksinxapp.dtos.TaskSubmissionRequest;
 import org.jas.ksinxapp.dtos.TaskSubmissionResponse;
 import org.jas.ksinxapp.mappers.TaskSubmissionMapper;
 import org.jas.ksinxapp.model.Task;
@@ -10,10 +9,12 @@ import org.jas.ksinxapp.model.User;
 import org.jas.ksinxapp.repo.TaskRepo;
 import org.jas.ksinxapp.repo.TaskSubmissionRepo;
 import org.jas.ksinxapp.repo.UserRepo;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,26 +26,30 @@ public class TaskSubmissionService {
     private final TaskRepo taskRepo;
     private final UserRepo userRepo;
     private final TaskSubmissionMapper taskSubmissionMapper;
+    private final MinIoStorageService minIoStorageService;
 
 
     //a student uploads a task
     @Transactional
-    public TaskSubmissionResponse submitTask(TaskSubmissionRequest request){
-        User student = userRepo.findById(request.studentId())
+    public TaskSubmissionResponse submitTask(Long studentId, Long taskId, MultipartFile file){
+        User student = userRepo.findById(studentId)
                 .orElseThrow(()->new RuntimeException("Student id not found"));
 
-        Task task = taskRepo.findById(request.taskId())
+        Task task = taskRepo.findById(taskId)
                 .orElseThrow(()->new RuntimeException("Task id not found"));
 
         if(taskSubmissionRepo.existsByStudentIdAndTaskId(student.getId(), task.getId())){
             throw new RuntimeException("You have already submitted this task");
         }
 
+        // backend uploads to the PRIVATE bucket and gets the permanent object key
+        String fileKey = minIoStorageService.privateUpload(file);
+
         //we build the entity manually here as we need actual User and Task objects
         TaskSubmission taskSubmission = TaskSubmission.builder()
                 .task(task)
                 .student(student)
-                .fileUrl(request.fileUrl())
+                .fileKey(fileKey)
                 .build();
 
         TaskSubmission savedSubmission = taskSubmissionRepo.save(taskSubmission);
@@ -73,6 +78,21 @@ public class TaskSubmissionService {
                 .stream()
                 .map(taskSubmissionMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public String getSubmissionFileUrl(Long submissionId, Long callerId, boolean callerIsTeacher){
+        TaskSubmission submission = taskSubmissionRepo.findById(submissionId)
+                .orElseThrow(()->new RuntimeException("Submission Id not found!"));
+
+        //authorization
+        //allow IF caller owns the submission OR is a teacher
+        boolean isOwner = submission.getStudent().getId().equals(callerId);
+        if(!isOwner && !callerIsTeacher){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to view this file");
+        }
+
+        return minIoStorageService.generatePreSignedUrl(submission.getFileKey());
     }
     
 }

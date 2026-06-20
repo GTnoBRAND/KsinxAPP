@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotNull;
 
 
 public record TaskSubmissionRequest(
-        @NotNull Long taskId,
-        @NotNull Long studentId,
-        @NotBlank String fileUrl
+        @NotNull Long taskId
 ) {
 }
