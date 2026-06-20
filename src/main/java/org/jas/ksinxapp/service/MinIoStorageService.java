@@ -48,7 +48,7 @@ public class MinIoStorageService {
                     PutObjectArgs.builder()
                             .bucket(publicBucket)
                             .object(key)
-                            .stream(file.getInputStream(), file.getSize(), -1)
+                            .stream(file.getInputStream(), file.getSize(), 10485760)
                             .contentType(file.getContentType())
                             .build()
             );
@@ -68,7 +68,7 @@ public class MinIoStorageService {
                     PutObjectArgs.builder()
                             .bucket(privateBucket)
                             .object(key)
-                            .stream(file.getInputStream(), file.getSize(), -1)
+                            .stream(file.getInputStream(), file.getSize(), 10485760)
                             .contentType(file.getContentType())
                             .build()
             );
