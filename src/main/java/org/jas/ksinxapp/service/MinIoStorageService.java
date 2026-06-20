@@ -56,7 +56,7 @@ public class MinIoStorageService {
             throw new RuntimeException(e);
         }
         //public bucket anonymous downloads -> permanent url works
-        return publicUrl + "/" + publicBucket + "/" + key;
+        return publicUrl + "/" + key;
     }
 
     //2 private upload
