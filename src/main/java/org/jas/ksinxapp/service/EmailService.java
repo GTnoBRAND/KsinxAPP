@@ -21,6 +21,9 @@ import java.time.Year;
 @Slf4j
 public class EmailService {
 
+    private static final String SUBJECT_VERIFICATION = "Verify your LutorLMS email";
+    private static final String SUBJECT_ACCOUNT_EXISTS = "Someone tried to sign up with your email";
+
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine springTemplateEngine;
     private final String from;
@@ -43,6 +46,7 @@ public class EmailService {
         this.expiryHours = expiryHours;
     }
 
+    @Async("emailExecutor")
     public void sendVerificationEmail(String to, String recipientName, String token){
         String link = baseUrl + "/verify-email?token=" + token;
 
@@ -55,20 +59,20 @@ public class EmailService {
         String htmlBody = springTemplateEngine.process("verification.html", context);
         String textBody = springTemplateEngine.process("verification.txt", context);
 
-        sendMime(to, from, htmlBody, textBody);
+        sendMime(to, SUBJECT_VERIFICATION, htmlBody, textBody);
     }
 
-    @Async
+    @Async("emailExecutor")
     public void sendAccountExistingEmail(String to){
         Context context = new Context();
         context.setVariable("loginLink", baseUrl + "/login");
-        context.setVariable("passwordResetLink", baseUrl +"/auth/forgot-password");
+        context.setVariable("passwordResetLink", baseUrl + "/auth/forgot-password");
         context.setVariable("year", Year.now().getValue());
 
-        String htmlBody = springTemplateEngine.process("verification.html", context);
-        String textBody = springTemplateEngine.process("verification.txt", context);
+        String htmlBody = springTemplateEngine.process("account-exists.html", context);
+        String textBody = springTemplateEngine.process("account-exists.txt", context);
 
-        sendMime(to, from, htmlBody, textBody);
+        sendMime(to, SUBJECT_ACCOUNT_EXISTS, htmlBody, textBody);
     }
 
     private void sendMime(String to, String subject, String htmlBody, String textBody){
@@ -87,7 +91,7 @@ public class EmailService {
             mailSender.send(message);
             log.info("Email '{}' sent to {}", subject, to);
         } catch (MailException | MessagingException | UnsupportedEncodingException e) {
-            log.info("Failed to send '{}' to {}", subject, to);
+            log.error("Failed to send '{}' to {}: {}", subject, to, e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
