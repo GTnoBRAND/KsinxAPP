@@ -8,6 +8,8 @@ import org.jas.ksinxapp.dtos.*;
 import org.jas.ksinxapp.jwt.JwtService;
 import org.jas.ksinxapp.model.User;
 import org.jas.ksinxapp.model.VerificationResult;
+import org.jas.ksinxapp.security.UserPrincipal;
+import org.jas.ksinxapp.service.TaskSubmissionService;
 import org.jas.ksinxapp.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,8 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
     private final RegistrationRateLimiter rateLimiter;
+    private final TaskSubmissionService taskSubmissionService;
+
 
     //post request to register the user
     @PostMapping("/register")
@@ -128,5 +132,24 @@ public class UserController {
         userService.resendVerification(request.email());
         return ResponseEntity.accepted()
                 .body(Map.of("Message", "If an account exists for this email, verification has been sent"));
+    }
+
+    @GetMapping("/{studentId}/getFeedback")
+    public ResponseEntity<TaskSubmissionResponse> getFeedback (@PathVariable Long studentId, Authentication authentication){
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        Long callerId = principal.getUser().getId();
+
+        boolean isTeacher = principal.getUser().getRole() == User.Role.TEACHER
+                || principal.getUser().getRole() == User.Role.ADMIN;
+
+        TaskSubmissionResponse feedback = taskSubmissionService.getFeedback(studentId, callerId,isTeacher);
+
+        return ResponseEntity.ok(feedback);
+    }
+
+    @GetMapping("/student/{studentId}/graded")
+    public ResponseEntity<List<TaskSubmissionResponse>> getStudentGradedSubmissions(@PathVariable Long studentId){
+        List<TaskSubmissionResponse> submissions = taskSubmissionService.getStudentGradedSubmissions(studentId);
+        return ResponseEntity.ok(submissions);
     }
 }

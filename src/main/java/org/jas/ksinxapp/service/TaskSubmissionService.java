@@ -9,7 +9,10 @@ import org.jas.ksinxapp.model.User;
 import org.jas.ksinxapp.repo.TaskRepo;
 import org.jas.ksinxapp.repo.TaskSubmissionRepo;
 import org.jas.ksinxapp.repo.UserRepo;
+import org.jas.ksinxapp.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,6 +73,38 @@ public class TaskSubmissionService {
 
         TaskSubmission savedSubmission = taskSubmissionRepo.save(submission);
         return taskSubmissionMapper.toResponse(savedSubmission);
+    }
+
+    @Transactional(readOnly = true)
+    public TaskSubmissionResponse getFeedback(Long submissionId, Long callerId, boolean callerIsTeacher){
+        TaskSubmission submission = taskSubmissionRepo.findById(submissionId)
+                .orElseThrow(()->new RuntimeException("Submission not found"));
+        //authorization, only student and a teacher can see it
+        boolean isOwner = submission.getStudent().getId().equals(callerId);
+        if(!isOwner && !callerIsTeacher){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to view this submission feedback");
+        }
+
+        if(submission.getScore() == null){
+            throw new RuntimeException("This submission has not been graded yet!");
+        }
+        return taskSubmissionMapper.toResponse(submission);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskSubmissionResponse> getStudentGradedSubmissions(Long studentId){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+        Long loggedInUser = principal.getUser().getId();
+
+        if(!loggedInUser.equals(studentId)){
+            throw new RuntimeException("You can only view your own submissions!");
+        }
+
+        return taskSubmissionRepo.findByStudentIdAndScoreIsNotNull(studentId)
+                .stream()
+                .map(taskSubmissionMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

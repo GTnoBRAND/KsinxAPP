@@ -21,4 +21,5 @@ public interface TaskSubmissionRepo extends JpaRepository<TaskSubmission,Long> {
 
     int countByStudentIdAndTask_Module_CourseIdAndScoreNotNull(Long studentId, Long courseId);
 
+    List<TaskSubmission> findByStudentIdAndScoreIsNotNull(Long studentId);
 }
