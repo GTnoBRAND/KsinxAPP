@@ -15,7 +15,7 @@ public interface EnrollmentMapper {
     @Mapping(source = "course.title", target = "courseTitle")
     @Mapping(target = "totalTasks", constant = "0")
     @Mapping(target = "totalCompletedTasks", constant = "0")
-    @Mapping(target = "completionPercentage", expression = "java(0.0)")
+    @Mapping(target = "completionPercentage", expression = "java(0.0d)")
     EnrollmentResponse toResponseDto(Enrollment enrollment);
 
     @Mapping(source = "enrollment.id", target = "enrollmentId")
