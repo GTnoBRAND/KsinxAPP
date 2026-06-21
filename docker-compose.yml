@@ -113,6 +113,14 @@ services:
       JWT_SECRET:          ${JWT_SECRET:-}
       ADMIN_EMAIL:         ${ADMIN_EMAIL:-admin@lutorlms.local}
       ADMIN_PASSWORD:      ${ADMIN_PASSWORD:-AdminChangeMe123}
+      # ── SMTP / email (required for the verification email) ──
+      MAIL_HOST:           ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT:           ${MAIL_PORT:-587}
+      MAIL_USERNAME:       ${MAIL_USERNAME:-}
+      MAIL_PASSWORD:       ${MAIL_PASSWORD:-}
+      MAIL_FROM:           ${MAIL_FROM:-}
+      MAIL_FROM_NAME:      ${MAIL_FROM_NAME:-LutorLMS}
+      APP_BASE_URL:        ${APP_BASE_URL:-http://localhost:8080}
       # ── Optional PayPal (empty = payment endpoints disabled) ──
       PAYPAL_CLIENT_ID:    ${PAYPAL_CLIENT_ID:-}
       PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
