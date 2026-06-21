@@ -77,6 +77,12 @@ window.api = (function () {
       // Returns a short-lived MinIO presigned URL for the submission file.
       fileUrl:  function (id)       { return request('GET',  '/v1/submission/' + id + '/file'); },
       grade:    function (id, sc, fb){ return request('PUT', '/v1/submission/' + id + '/grade?score=' + sc + '&teacherFeedback=' + encodeURIComponent(fb)); },
+
+      // ✨ NEW: Get all graded submissions for current student
+      getStudentGraded: function () { return request('GET', '/v1/submission/student/graded'); },
+
+      // ✨ NEW: Get feedback and score for a specific submission
+      getFeedback: function (id) { return request('GET', '/v1/submission/' + id + '/feedback'); },
     },
     payments: {
       createOrder: function (b)  { return request('POST', '/payments/orders/create', b); },
