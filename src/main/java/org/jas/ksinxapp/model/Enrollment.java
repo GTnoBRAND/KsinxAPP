@@ -29,6 +29,7 @@ public class Enrollment {
     @Column(nullable = false)
     private LocalDateTime enrollmentDate;
 
+    @Builder.Default
     private boolean isActive = true;
 
     @PrePersist
