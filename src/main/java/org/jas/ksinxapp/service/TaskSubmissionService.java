@@ -108,6 +108,18 @@ public class TaskSubmissionService {
     }
 
     @Transactional(readOnly = true)
+    public List<TaskSubmissionResponse> getMySubmissions(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+        Long studentId = principal.getUser().getId();
+
+        return taskSubmissionRepo.findByStudentId(studentId)
+                .stream()
+                .map(taskSubmissionMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<TaskSubmissionResponse> getUngradedSubmission(){
         return taskSubmissionRepo.findByScoreIsNull()
                 .stream()

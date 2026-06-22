@@ -1,11 +1,7 @@
 package org.jas.ksinxapp.controller;
 
-import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.jas.ksinxapp.dtos.TaskSubmissionRequest;
 import org.jas.ksinxapp.dtos.TaskSubmissionResponse;
-import org.jas.ksinxapp.model.TaskSubmission;
 import org.jas.ksinxapp.model.User;
 import org.jas.ksinxapp.security.UserPrincipal;
 import org.jas.ksinxapp.service.TaskSubmissionService;
@@ -56,6 +52,23 @@ public class TaskSubmissionController {
 
         String url = service.getSubmissionFileUrl(id, callerId, isTeacher);
         return ResponseEntity.ok(url);
+    }
+
+    //get: student lists all of their own submissions (graded + pending) for the Submissions page
+    @GetMapping("/my")
+    public ResponseEntity<List<TaskSubmissionResponse>> getMySubmissions(){
+        return ResponseEntity.ok(service.getMySubmissions());
+    }
+
+    //get: student fetches feedback/score for a single submission (owner-or-teacher check in service)
+    @GetMapping("/{id}/feedback")
+    public ResponseEntity<TaskSubmissionResponse> getFeedback(@PathVariable Long id, Authentication auth){
+        UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+        Long callerId = principal.getUser().getId();
+        boolean isTeacher = principal.getUser().getRole() == User.Role.TEACHER
+                || principal.getUser().getRole() == User.Role.ADMIN;
+
+        return ResponseEntity.ok(service.getFeedback(id, callerId, isTeacher));
     }
 
 }
