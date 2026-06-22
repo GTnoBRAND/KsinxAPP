@@ -174,7 +174,7 @@ public class UserService {
 
     public void issueVerificationToken(User user){
         verificationTokenRepository.deleteByUser(user); //delete old token if any
-
+        verificationTokenRepository.flush(); // ensure DELETE hits the DB before INSERT — unique(user_id) would otherwise collide
 
         String token = UUID.randomUUID().toString();
         VerificationToken vt = new VerificationToken();
