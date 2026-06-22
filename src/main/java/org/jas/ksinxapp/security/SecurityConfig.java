@@ -85,9 +85,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/vi/enrollments/progress", "/api/vi/enrollments/my").hasRole("STUDENT")
                         .requestMatchers("/api/v1/users/auth/token").authenticated()
                         .requestMatchers("/api/v1/submission/submit").hasRole("STUDENT")
-                        // The submission/{id}/file endpoint enforces its own ownership check
-                        // (student-owner OR teacher), so it just needs an authenticated caller.
+                        // Student listing their own submissions for the Submissions page
+                        .requestMatchers(HttpMethod.GET, "/api/v1/submission/my").hasRole("STUDENT")
+                        // The submission/{id}/file and /{id}/feedback endpoints enforce their own ownership checks
+                        // (student-owner OR teacher), so they just need an authenticated caller.
                         .requestMatchers(HttpMethod.GET, "/api/v1/submission/*/file").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/submission/*/feedback").authenticated()
                         // Direct uploads to MinIO's public bucket back the teacher's course
                         // cover photo / module teaser video flow — restrict to TEACHER.
                         .requestMatchers("/api/v1/files/upload").hasRole("TEACHER")
