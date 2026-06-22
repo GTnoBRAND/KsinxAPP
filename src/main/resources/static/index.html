@@ -142,9 +142,12 @@
       return;
     }
     grid.innerHTML = filtered.map(function(c) {
+      var thumb = c.imageUrl
+        ? '<img src="' + esc(c.imageUrl) + '" alt="' + esc(c.title) + '" class="course-thumbnail-img" loading="lazy" />'
+        : '<span style="position:relative;z-index:1">' + UI.courseEmoji(c.id) + '</span>';
       return '<div class="course-card" onclick="window.location.href=\'/course.html?id=' + c.id + '\'">' +
-        '<div class="course-thumbnail">' +
-          '<span style="position:relative;z-index:1">' + UI.courseEmoji(c.id) + '</span>' +
+        '<div class="course-thumbnail' + (c.imageUrl ? ' has-image' : '') + '">' +
+          thumb +
           (c.price && c.price > 0
             ? '<span class="course-badge">Premium</span>'
             : '<span class="course-badge" style="background:#4da6ff;color:#000">Free</span>') +

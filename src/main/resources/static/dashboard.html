@@ -110,7 +110,7 @@
     enrollments = data || [];
 
     document.getElementById('stat-enrolled').textContent = enrollments.length;
-    document.getElementById('stat-active').textContent   = enrollments.filter(function(e){ return e.isActive; }).length;
+    document.getElementById('stat-active').textContent   = enrollments.filter(function(e){ return e.courseActive; }).length;
 
     renderOverviewCourses();
     renderEnrolledGrid();
@@ -143,7 +143,7 @@
                   '<span style="white-space:nowrap;font-size:12px;color:var(--text-muted)">' + e.totalCompletedTasks + '/' + e.totalTasks + ' (' + pct + '%)</span>' +
                 '</div>' +
               '</td>' +
-              '<td><span class="badge ' + (e.isActive ? 'badge-success' : 'badge-muted') + '">' + (e.isActive ? 'Active' : 'Inactive') + '</span></td>' +
+              '<td><span class="badge ' + (e.courseActive ? 'badge-success' : 'badge-muted') + '">' + (e.courseActive ? 'Active' : 'Inactive') + '</span></td>' +
               '<td><a href="/course.html?id=' + e.courseId + '" class="btn btn-ghost btn-sm">Continue →</a></td>' +
             '</tr>';
           }).join('') +

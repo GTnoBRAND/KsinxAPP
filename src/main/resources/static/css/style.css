@@ -502,11 +502,23 @@ img { max-width: 100%; }
   overflow: hidden;
 }
 
+.course-thumbnail.has-image {
+  background: #0d1f0d;
+}
+
+.course-thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .course-thumbnail::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom, transparent 50%, rgba(30, 30, 30, 0.8));
+  pointer-events: none;
 }
 
 .course-badge {
@@ -1488,8 +1500,11 @@ footer {
 }
 
 @media (max-width: 768px) {
-  .navbar-nav, .navbar-actions .btn-outline { display: none; }
-  .hamburger { display: flex; }
+  .navbar-nav { display: none; }
+  .navbar { padding: 0 16px; gap: 8px; }
+  .navbar-actions { gap: 8px; }
+  .navbar-user span { display: none; } /* hide first name to save space; avatar stays */
+  .navbar-actions .btn { padding: 8px 12px; font-size: 0.8rem; }
 
   .hero-grid { grid-template-columns: 1fr; }
   .hero-visual { display: none; }
@@ -1510,4 +1525,6 @@ footer {
   .stats-grid { grid-template-columns: 1fr; }
   .auth-card { padding: 28px 20px; }
   .hero-title { font-size: 2rem; }
+  .navbar-brand { font-size: 1.1rem; }
+  .navbar-actions .btn { padding: 6px 10px; font-size: 0.75rem; }
 }
