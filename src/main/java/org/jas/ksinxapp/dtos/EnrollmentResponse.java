@@ -13,6 +13,7 @@ public record EnrollmentResponse(
         String courseTitle,
         LocalDateTime enrollmentDate,
         boolean isActive,
+        boolean courseActive,
         int totalTasks,
         int totalCompletedTasks,
         double completionPercentage
