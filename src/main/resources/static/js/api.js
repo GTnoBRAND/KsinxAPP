@@ -78,10 +78,10 @@ window.api = (function () {
       fileUrl:  function (id)       { return request('GET',  '/v1/submission/' + id + '/file'); },
       grade:    function (id, sc, fb){ return request('PUT', '/v1/submission/' + id + '/grade?score=' + sc + '&teacherFeedback=' + encodeURIComponent(fb)); },
 
-      // ✨ NEW: Get all graded submissions for current student
-      getStudentGraded: function () { return request('GET', '/v1/submission/student/graded'); },
+      // All submissions for the logged-in student (graded + pending) — used by submissions.html
+      mine: function () { return request('GET', '/v1/submission/my'); },
 
-      // ✨ NEW: Get feedback and score for a specific submission
+      // Score + feedback for one submission (server checks owner or teacher)
       getFeedback: function (id) { return request('GET', '/v1/submission/' + id + '/feedback'); },
     },
     payments: {

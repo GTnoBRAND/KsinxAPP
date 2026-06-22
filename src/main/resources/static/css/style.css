@@ -1513,7 +1513,51 @@ footer {
   .enroll-card { position: static; }
 
   .dashboard-main { margin-left: 0; padding: 20px; }
-  .sidebar { display: none; }
+
+  /* Sidebar collapses into a horizontal scrollable tab strip pinned under the navbar */
+  .dashboard-layout { flex-direction: column; }
+  .sidebar {
+    position: fixed;
+    top: 68px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    padding: 8px 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    z-index: 999;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .sidebar::-webkit-scrollbar { height: 0; }
+  .sidebar-section {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+  .sidebar-label { display: none; }
+  .sidebar-item {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 50px;
+    border-left: none;
+    font-size: 0.82rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+  .sidebar-item.active {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .dashboard-main { margin-top: 56px; }
 
   .features-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr 1fr; }

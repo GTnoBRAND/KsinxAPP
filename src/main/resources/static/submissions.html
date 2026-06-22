@@ -494,9 +494,9 @@
         var container = document.getElementById('submissions-container');
         container.innerHTML = '<div class="loading-overlay" style="grid-column:1/-1"><div class="spinner"></div><span>Loading submissions…</span></div>';
 
-        api.submissions.getStudentGraded()
-            .then(function(graded) {
-                allSubmissions = graded || [];
+        api.submissions.mine()
+            .then(function(list) {
+                allSubmissions = list || [];
                 renderSubmissions();
             })
             .catch(function(err) {
