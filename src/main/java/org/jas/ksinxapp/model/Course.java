@@ -29,6 +29,10 @@ public class Course {
     //short teaser/spoiler video
     private String videoUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CourseCategory category = CourseCategory.OTHER;
+
     //a course has many curriculums, modules
     @OneToMany(mappedBy = "course",cascade = CascadeType.ALL)
     private List<Modules> modules;
@@ -57,6 +61,7 @@ public class Course {
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", price=" + price +
+                ", category=" + category +
                 ", modules=" + modules +
                 ", isActive=" + isActive +
                 '}';
