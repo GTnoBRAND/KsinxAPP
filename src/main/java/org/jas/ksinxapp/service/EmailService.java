@@ -48,7 +48,7 @@ public class EmailService {
 
     @Async("emailExecutor")
     public void sendVerificationEmail(String to, String recipientName, String token){
-        String link = baseUrl + "/verify-email?token=" + token;
+        String link = baseUrl + "/verify-email.html?token=" + token;
 
         Context context = new Context();
         context.setVariable("recipientName", recipientName != null ? recipientName : "there");
@@ -65,7 +65,7 @@ public class EmailService {
     @Async("emailExecutor")
     public void sendAccountExistingEmail(String to){
         Context context = new Context();
-        context.setVariable("loginLink", baseUrl + "/login");
+        context.setVariable("loginLink", baseUrl + "/login.html");
         context.setVariable("passwordResetLink", baseUrl + "/auth/forgot-password");
         context.setVariable("year", Year.now().getValue());
 
