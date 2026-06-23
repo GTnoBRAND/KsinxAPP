@@ -1,6 +1,7 @@
 package org.jas.ksinxapp.repo;
 
 import org.jas.ksinxapp.model.Course;
+import org.jas.ksinxapp.model.CourseCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,5 @@ public interface CourseRepo extends JpaRepository<Course,Long> {
 
     List<Course> findByIsActiveTrue();
     Page<Course> findByIsActiveTrue(Pageable pageable);
+    Page<Course> findByIsActiveTrueAndCategory(CourseCategory category, Pageable pageable);
 }
