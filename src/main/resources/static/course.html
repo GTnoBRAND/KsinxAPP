@@ -38,6 +38,18 @@
             <li>Certificate of completion</li>
           </ul>
         </div>
+        <div class="enroll-card" id="rating-card" style="display:none;margin-top:16px">
+          <div style="font-weight:700;margin-bottom:6px">Course Rating</div>
+          <div id="rating-summary" style="color:var(--text-secondary);margin-bottom:12px;font-size:.95rem">Loading…</div>
+          <div id="rating-widget" style="display:none">
+            <p style="color:var(--text-muted);font-size:.8rem;margin-bottom:8px">Click a star to rate:</p>
+            <div id="rating-stars" style="display:flex;gap:8px;font-size:2rem;cursor:pointer;user-select:none;color:var(--text-muted)">
+              <span data-star="1">☆</span><span data-star="2">☆</span><span data-star="3">☆</span><span data-star="4">☆</span><span data-star="5">☆</span>
+            </div>
+            <p id="rating-msg" style="color:var(--text-muted);font-size:.8rem;margin-top:8px"></p>
+          </div>
+          <div id="rating-locked" style="color:var(--text-muted);font-size:.8rem;display:none">Enroll in this course to leave a rating.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -50,18 +62,6 @@
       <div id="modules-list">
         <div class="loading-overlay"><div class="spinner" style="width:28px;height:28px;border-width:3px"></div><span>Loading modules…</span></div>
       </div>
-    </div>
-    <div class="modules-section" style="margin-top:32px">
-      <h2>Ratings</h2>
-      <div id="rating-summary" style="color:var(--text-secondary);margin-bottom:12px">Loading…</div>
-      <div id="rating-widget" style="display:none">
-        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:8px">Tap a star to rate this course:</p>
-        <div id="rating-stars" style="display:flex;gap:6px;font-size:1.8rem;cursor:pointer;user-select:none">
-          <span data-star="1">☆</span><span data-star="2">☆</span><span data-star="3">☆</span><span data-star="4">☆</span><span data-star="5">☆</span>
-        </div>
-        <p id="rating-msg" style="color:var(--text-muted);font-size:.8rem;margin-top:6px"></p>
-      </div>
-      <div id="rating-locked" style="color:var(--text-muted);font-size:.85rem;display:none">Only enrolled students can rate this course.</div>
     </div>
   </div>
 </div>
@@ -125,6 +125,9 @@
       '<div class="course-tags">' +
         '<span class="tag">📦 ' + (c.totalModules || 0) + ' Modules</span>' +
         (catLabel ? '<span class="tag">🏷 ' + esc(catLabel) + '</span>' : '') +
+        (c.ratingCount && c.ratingCount > 0
+          ? '<span class="tag">⭐ ' + Number(c.averageRating).toFixed(1) + ' (' + c.ratingCount + ')</span>'
+          : '<span class="tag">⭐ Not yet rated</span>') +
         '<span class="tag">⏱ Self-paced</span>' +
         '<span class="tag">🌐 Online</span>' +
         (c.price && c.price > 0 ? '<span class="tag">💳 Premium</span>' : '<span class="tag">✨ Free</span>') +
@@ -132,6 +135,7 @@
 
     document.getElementById('enroll-price').textContent = price;
     document.getElementById('enroll-card').style.display = 'block';
+    document.getElementById('rating-card').style.display = 'block';
     var enrollBtn = document.getElementById('enroll-btn');
     if (isInactive) {
       enrollBtn.disabled = true;
@@ -179,7 +183,9 @@
     if (el) el.classList.toggle('open');
   }
 
-  function renderStars(value) {
+  var currentRating = 0; // persisted server-side rating for THIS user; drives the "rest" state
+
+  function paintStars(value) {
     var stars = document.querySelectorAll('#rating-stars span');
     stars.forEach(function(s) {
       var n = Number(s.dataset.star);
@@ -188,55 +194,62 @@
     });
   }
 
+  function renderSummary(r) {
+    var summary = document.getElementById('rating-summary');
+    if (r && r.ratingCount && r.ratingCount > 0) {
+      summary.innerHTML = '<strong style="font-size:1.2rem;color:#f5b400">★ ' + Number(r.averageRating).toFixed(1) + '</strong>'
+                        + '<span style="margin-left:8px;color:var(--text-muted)">(' + r.ratingCount + ' rating' + (r.ratingCount === 1 ? '' : 's') + ')</span>';
+    } else {
+      summary.textContent = 'No ratings yet — be the first.';
+    }
+  }
+
   function loadRating() {
     api.courses.rating(courseId).then(function(r) {
-      var summary = document.getElementById('rating-summary');
-      if (r.ratingCount && r.ratingCount > 0) {
-        summary.innerHTML = '<strong style="font-size:1.2rem;color:#f5b400">★ ' + Number(r.averageRating).toFixed(1) + '</strong>'
-                          + '<span style="margin-left:8px;color:var(--text-muted)">(' + r.ratingCount + ' rating' + (r.ratingCount === 1 ? '' : 's') + ')</span>';
-      } else {
-        summary.textContent = 'No ratings yet — be the first.';
-      }
+      renderSummary(r);
 
       var session = Auth.getSession();
       var isStudent = session && session.user && session.user.role === 'STUDENT';
-      if (!isStudent) { return; }
+      var widget = document.getElementById('rating-widget');
+      var locked = document.getElementById('rating-locked');
 
-      // Only enrolled students can rate — check via /my enrollments
+      if (!isStudent) {
+        locked.textContent = session ? 'Only students can rate courses.' : 'Log in as a student to rate this course.';
+        locked.style.display = 'block';
+        return;
+      }
+
       api.enrollments.my().then(function(myEnroll) {
-        var enrolled = (myEnroll || []).some(function(e) {
-          return e && e.courseId == courseId;
-        });
-        var widget = document.getElementById('rating-widget');
-        var locked = document.getElementById('rating-locked');
+        var enrolled = (myEnroll || []).some(function(e) { return e && String(e.courseId) === String(courseId); });
         if (enrolled) {
           widget.style.display = 'block';
-          if (r.myRating) {
-            renderStars(r.myRating);
-            document.getElementById('rating-msg').textContent = 'Your rating: ' + r.myRating + ' / 5';
-          } else {
-            renderStars(0);
+          currentRating = r.myRating || 0;
+          paintStars(currentRating);
+          if (currentRating) {
+            document.getElementById('rating-msg').textContent = 'Your rating: ' + currentRating + ' / 5';
           }
         } else {
           locked.style.display = 'block';
         }
-      }).catch(function(){ /* not enrolled */ });
-    }).catch(function(){
+      }).catch(function() {
+        locked.style.display = 'block';
+      });
+    }).catch(function() {
       document.getElementById('rating-summary').textContent = 'Ratings unavailable right now.';
     });
   }
 
+  // Mouse hover preview (desktop) — restore on leave instead of refetching from server.
   document.querySelectorAll('#rating-stars span').forEach(function(star) {
-    star.addEventListener('mouseenter', function() { renderStars(Number(star.dataset.star)); });
+    star.addEventListener('mouseenter', function() { paintStars(Number(star.dataset.star)); });
     star.addEventListener('click', function() {
       var value = Number(star.dataset.star);
       api.courses.rate(courseId, value).then(function(r) {
+        currentRating = value;
         UI.toast('Thanks for rating!', 'success');
-        renderStars(value);
+        paintStars(value);
         document.getElementById('rating-msg').textContent = 'Your rating: ' + value + ' / 5';
-        var summary = document.getElementById('rating-summary');
-        summary.innerHTML = '<strong style="font-size:1.2rem;color:#f5b400">★ ' + Number(r.averageRating).toFixed(1) + '</strong>'
-                          + '<span style="margin-left:8px;color:var(--text-muted)">(' + r.ratingCount + ' rating' + (r.ratingCount === 1 ? '' : 's') + ')</span>';
+        renderSummary(r);
       }).catch(function(e) {
         UI.toast(e.message || 'Rating failed', 'error');
       });
@@ -244,10 +257,7 @@
   });
   var starsContainer = document.getElementById('rating-stars');
   if (starsContainer) {
-    starsContainer.addEventListener('mouseleave', function() {
-      // restore the persisted rating after hover-preview
-      api.courses.rating(courseId).then(function(r) { renderStars(r.myRating || 0); });
-    });
+    starsContainer.addEventListener('mouseleave', function() { paintStars(currentRating); });
   }
 
   function openEnrollModal() {
