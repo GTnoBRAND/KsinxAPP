@@ -45,7 +45,8 @@ public class EnrollmentService {
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course Not Found"));
 
         if(!Boolean.TRUE.equals(course.getIsActive())){
-            throw new RuntimeException("Course is not active anymore");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This course is currently inactive and cannot be enrolled in until it is reactivated.");
         }
 
         //prevent duplicate active enrollments(business logic)

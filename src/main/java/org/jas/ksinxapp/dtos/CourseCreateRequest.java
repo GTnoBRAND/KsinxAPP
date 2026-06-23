@@ -1,6 +1,7 @@
 package org.jas.ksinxapp.dtos;
 
 import jakarta.validation.constraints.NotBlank;
+import org.jas.ksinxapp.model.CourseCategory;
 
 import java.math.BigDecimal;
 
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 public record CourseCreateRequest(
         @NotBlank String title,
         @NotBlank String description,
-        BigDecimal price
+        BigDecimal price,
+        CourseCategory category
 ) {
 }
