@@ -44,11 +44,20 @@ window.api = (function () {
       setRole:    function (id, role){ return request('PUT', '/v1/users/' + id + '/role', { role: role }); },
     },
     courses: {
-      all:    function (p, s) { return request('GET', '/course/all?pageNo=' + (p||1) + '&pageSize=' + (s||12) + '&sortBy=id&sortDir=asc'); },
-      find:   function (id)   { return request('GET', '/course/find/' + id); },
-      create: function (b)    { return request('POST',   '/course/add', b); },
-      update: function (id,b) { return request('PUT',    '/course/update/' + id, b); },
-      delete: function (id,a) { return request('DELETE', '/course/delete/' + id + '?isActive=' + a); },
+      all:    function (p, s, opts) {
+        opts = opts || {};
+        var q = '?pageNo=' + (p||1) + '&pageSize=' + (s||12) + '&sortBy=id&sortDir=asc';
+        if (opts.category) q += '&category=' + encodeURIComponent(opts.category);
+        if (opts.includeInactive) q += '&includeInactive=true';
+        return request('GET', '/course/all' + q);
+      },
+      find:    function (id)   { return request('GET', '/course/find/' + id); },
+      create:  function (b)    { return request('POST',   '/course/add', b); },
+      update:  function (id,b) { return request('PUT',    '/course/update/' + id, b); },
+      delete:  function (id,a) { return request('DELETE', '/course/delete/' + id + '?isActive=' + a); },
+      setActive: function (id,a){ return request('PUT', '/course/' + id + '/status?isActive=' + a); },
+      rating:  function (id)   { return request('GET',  '/course/' + id + '/rating'); },
+      rate:    function (id,r) { return request('POST', '/course/' + id + '/rate', { rating: r }); },
     },
     enrollments: {
       all:    function ()  { return request('GET',  '/vi/enrollments/all'); },

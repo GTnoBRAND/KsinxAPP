@@ -51,6 +51,18 @@
         <div class="loading-overlay"><div class="spinner" style="width:28px;height:28px;border-width:3px"></div><span>Loading modules…</span></div>
       </div>
     </div>
+    <div class="modules-section" style="margin-top:32px">
+      <h2>Ratings</h2>
+      <div id="rating-summary" style="color:var(--text-secondary);margin-bottom:12px">Loading…</div>
+      <div id="rating-widget" style="display:none">
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:8px">Tap a star to rate this course:</p>
+        <div id="rating-stars" style="display:flex;gap:6px;font-size:1.8rem;cursor:pointer;user-select:none">
+          <span data-star="1">☆</span><span data-star="2">☆</span><span data-star="3">☆</span><span data-star="4">☆</span><span data-star="5">☆</span>
+        </div>
+        <p id="rating-msg" style="color:var(--text-muted);font-size:.8rem;margin-top:6px"></p>
+      </div>
+      <div id="rating-locked" style="color:var(--text-muted);font-size:.85rem;display:none">Only enrolled students can rate this course.</div>
+    </div>
   </div>
 </div>
 
@@ -92,8 +104,13 @@
     document.getElementById('breadcrumb-title').textContent = c.title;
 
     var price = c.price && c.price > 0 ? '$' + Number(c.price).toFixed(2) : 'Free';
+    var isInactive = c.isActive === false;
+    var catLabel = c.category ? c.category.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function(s){ return s.toUpperCase(); }) : null;
 
     document.getElementById('header-content').innerHTML =
+      (isInactive
+        ? '<div style="background:rgba(255,90,90,.12);border:1px solid rgba(255,90,90,.35);border-radius:10px;padding:12px 16px;color:var(--danger);font-weight:700;margin-bottom:18px">⚠️ This course is currently inactive — new enrollments are paused until it is reactivated.</div>'
+        : '') +
       (c.imageUrl
         ? '<img src="' + esc(c.imageUrl) + '" alt="' + esc(c.title) + '" style="width:100%;max-height:340px;object-fit:cover;border-radius:12px;margin-bottom:18px" />'
         : '') +
@@ -107,6 +124,7 @@
         : '') +
       '<div class="course-tags">' +
         '<span class="tag">📦 ' + (c.totalModules || 0) + ' Modules</span>' +
+        (catLabel ? '<span class="tag">🏷 ' + esc(catLabel) + '</span>' : '') +
         '<span class="tag">⏱ Self-paced</span>' +
         '<span class="tag">🌐 Online</span>' +
         (c.price && c.price > 0 ? '<span class="tag">💳 Premium</span>' : '<span class="tag">✨ Free</span>') +
@@ -114,7 +132,17 @@
 
     document.getElementById('enroll-price').textContent = price;
     document.getElementById('enroll-card').style.display = 'block';
-    document.getElementById('enroll-btn').onclick = openEnrollModal;
+    var enrollBtn = document.getElementById('enroll-btn');
+    if (isInactive) {
+      enrollBtn.disabled = true;
+      enrollBtn.textContent = 'Course Inactive';
+      enrollBtn.style.opacity = '.6';
+      enrollBtn.style.cursor = 'not-allowed';
+    } else {
+      enrollBtn.onclick = openEnrollModal;
+    }
+
+    loadRating();
 
     return api.modules.byCourse(courseId);
   }).then(function(modules) {
@@ -149,6 +177,77 @@
   function toggleMod(id) {
     var el = document.getElementById('mod-' + id);
     if (el) el.classList.toggle('open');
+  }
+
+  function renderStars(value) {
+    var stars = document.querySelectorAll('#rating-stars span');
+    stars.forEach(function(s) {
+      var n = Number(s.dataset.star);
+      s.textContent = n <= value ? '★' : '☆';
+      s.style.color = n <= value ? '#f5b400' : 'var(--text-muted)';
+    });
+  }
+
+  function loadRating() {
+    api.courses.rating(courseId).then(function(r) {
+      var summary = document.getElementById('rating-summary');
+      if (r.ratingCount && r.ratingCount > 0) {
+        summary.innerHTML = '<strong style="font-size:1.2rem;color:#f5b400">★ ' + Number(r.averageRating).toFixed(1) + '</strong>'
+                          + '<span style="margin-left:8px;color:var(--text-muted)">(' + r.ratingCount + ' rating' + (r.ratingCount === 1 ? '' : 's') + ')</span>';
+      } else {
+        summary.textContent = 'No ratings yet — be the first.';
+      }
+
+      var session = Auth.getSession();
+      var isStudent = session && session.user && session.user.role === 'STUDENT';
+      if (!isStudent) { return; }
+
+      // Only enrolled students can rate — check via /my enrollments
+      api.enrollments.my().then(function(myEnroll) {
+        var enrolled = (myEnroll || []).some(function(e) {
+          return e && e.courseId == courseId;
+        });
+        var widget = document.getElementById('rating-widget');
+        var locked = document.getElementById('rating-locked');
+        if (enrolled) {
+          widget.style.display = 'block';
+          if (r.myRating) {
+            renderStars(r.myRating);
+            document.getElementById('rating-msg').textContent = 'Your rating: ' + r.myRating + ' / 5';
+          } else {
+            renderStars(0);
+          }
+        } else {
+          locked.style.display = 'block';
+        }
+      }).catch(function(){ /* not enrolled */ });
+    }).catch(function(){
+      document.getElementById('rating-summary').textContent = 'Ratings unavailable right now.';
+    });
+  }
+
+  document.querySelectorAll('#rating-stars span').forEach(function(star) {
+    star.addEventListener('mouseenter', function() { renderStars(Number(star.dataset.star)); });
+    star.addEventListener('click', function() {
+      var value = Number(star.dataset.star);
+      api.courses.rate(courseId, value).then(function(r) {
+        UI.toast('Thanks for rating!', 'success');
+        renderStars(value);
+        document.getElementById('rating-msg').textContent = 'Your rating: ' + value + ' / 5';
+        var summary = document.getElementById('rating-summary');
+        summary.innerHTML = '<strong style="font-size:1.2rem;color:#f5b400">★ ' + Number(r.averageRating).toFixed(1) + '</strong>'
+                          + '<span style="margin-left:8px;color:var(--text-muted)">(' + r.ratingCount + ' rating' + (r.ratingCount === 1 ? '' : 's') + ')</span>';
+      }).catch(function(e) {
+        UI.toast(e.message || 'Rating failed', 'error');
+      });
+    });
+  });
+  var starsContainer = document.getElementById('rating-stars');
+  if (starsContainer) {
+    starsContainer.addEventListener('mouseleave', function() {
+      // restore the persisted rating after hover-preview
+      api.courses.rating(courseId).then(function(r) { renderStars(r.myRating || 0); });
+    });
   }
 
   function openEnrollModal() {

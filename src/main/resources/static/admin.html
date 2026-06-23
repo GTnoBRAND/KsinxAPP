@@ -69,8 +69,8 @@
         <div class="table-header"><span class="table-title">All Courses</span><button class="btn btn-outline btn-sm" onclick="loadCourses()">↻ Refresh</button></div>
         <div class="table-responsive">
           <table>
-            <thead><tr><th>ID</th><th>Title</th><th>Price</th><th>Modules</th><th>Actions</th></tr></thead>
-            <tbody id="courses-tbody"><tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div></div></td></tr></tbody>
+            <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Price</th><th>Modules</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="courses-tbody"><tr><td colspan="7"><div class="loading-overlay"><div class="spinner"></div></div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -124,6 +124,20 @@
       <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="course-desc" rows="3" placeholder="Course description…"></textarea></div>
       <div class="form-group"><label class="form-label">Price (USD) — 0 for free</label><input class="form-control" type="number" id="course-price" value="0" min="0" step="0.01" /></div>
       <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-control" id="course-category">
+          <option value="PROGRAMMING">Programming</option>
+          <option value="WEB_DEVELOPMENT">Web Development</option>
+          <option value="CLOUD">Cloud</option>
+          <option value="GAMING">Gaming</option>
+          <option value="FOREIGN_LANGUAGES">Foreign Languages</option>
+          <option value="MATH">Math</option>
+          <option value="CHEMISTRY">Chemistry</option>
+          <option value="BIOLOGY">Biology</option>
+          <option value="OTHER" selected>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label class="form-label">Cover Photo</label>
         <input class="form-control" type="file" id="course-image" accept="image/*" />
         <img id="course-image-preview" alt="Cover preview" class="media-preview" style="display:none" />
@@ -143,14 +157,14 @@
   </div>
 </div>
 
-<!-- Delete Confirm Modal -->
+<!-- Deactivate Confirm Modal -->
 <div class="modal-overlay" id="delete-modal">
   <div class="modal" style="max-width:400px">
-    <div class="modal-header"><h3 class="modal-title">Delete Course?</h3><button class="modal-close" onclick="UI.closeModal('delete-modal')">✕</button></div>
-    <div class="modal-body"><p style="color:var(--text-secondary)">This will soft-delete <strong id="delete-course-name"></strong>. It can be reactivated later.</p></div>
+    <div class="modal-header"><h3 class="modal-title">Deactivate Course?</h3><button class="modal-close" onclick="UI.closeModal('delete-modal')">✕</button></div>
+    <div class="modal-body"><p style="color:var(--text-secondary)">This will hide <strong id="delete-course-name"></strong> from the public catalog and block new enrollments. You can reactivate it from this page anytime.</p></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="UI.closeModal('delete-modal')">Cancel</button>
-      <button class="btn btn-danger" id="delete-confirm-btn">Delete</button>
+      <button class="btn btn-danger" id="delete-confirm-btn">Deactivate</button>
     </div>
   </div>
 </div>
@@ -202,36 +216,54 @@
 
   // ── Courses ──────────────────────────────────────────
   function loadCourses() {
-    return api.courses.all(1,50).then(function(data) {
+    return api.courses.all(1, 50, { includeInactive: true }).then(function(data) {
       allCourses = Array.isArray(data) ? data : (data&&data.content ? data.content : []);
       document.getElementById('s-courses').textContent = allCourses.length;
       renderCoursesTable();
       renderOverviewCourses();
-      var opts = allCourses.map(function(c){ return '<option value="' + c.id + '">' + esc(c.title) + '</option>'; }).join('');
+      var opts = allCourses.filter(function(c){ return c.isActive !== false; })
+        .map(function(c){ return '<option value="' + c.id + '">' + esc(c.title) + '</option>'; }).join('');
       document.getElementById('enroll-course-id').innerHTML = opts;
     }).catch(function(e){ UI.toast('Failed to load courses: ' + e.message,'error'); });
+  }
+
+  function prettyCategory(cat) {
+    if (!cat) return '—';
+    return String(cat).replace(/_/g,' ').toLowerCase().replace(/\b\w/g, function(s){ return s.toUpperCase(); });
   }
 
   function renderCoursesTable() {
     var tbody = document.getElementById('courses-tbody');
     if (!allCourses.length) {
-      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📚</div><h3>No courses yet</h3></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📚</div><h3>No courses yet</h3></div></td></tr>';
       return;
     }
     tbody.innerHTML = allCourses.map(function(c) {
+      var isActive = c.isActive !== false;
       return '<tr>' +
         '<td style="color:var(--text-muted)">#' + c.id + '</td>' +
         '<td><strong>' + esc(c.title) + '</strong></td>' +
+        '<td>' + esc(prettyCategory(c.category)) + '</td>' +
         '<td>' + (c.price&&c.price>0 ? '<span style="color:var(--accent)">$'+Number(c.price).toFixed(2)+'</span>' : '<span class="badge badge-success">Free</span>') + '</td>' +
         '<td>' + (c.totalModules||0) + '</td>' +
+        '<td><span class="badge ' + (isActive?'badge-success':'badge-muted') + '">' + (isActive?'Active':'Inactive') + '</span></td>' +
         '<td>' +
-          '<div style="display:flex;gap:8px">' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
             '<button class="btn btn-outline btn-sm" onclick="editCourse(' + c.id + ')">Edit</button>' +
-            '<button class="btn btn-danger btn-sm" onclick="confirmDelete(' + c.id + ',\'' + esc(c.title).replace(/'/g,"\\'") + '\')">Delete</button>' +
+            (isActive
+              ? '<button class="btn btn-danger btn-sm" onclick="confirmDelete(' + c.id + ',\'' + esc(c.title).replace(/'/g,"\\'") + '\')">Deactivate</button>'
+              : '<button class="btn btn-primary btn-sm" onclick="reactivateCourse(' + c.id + ')">Activate</button>') +
           '</div>' +
         '</td>' +
       '</tr>';
     }).join('');
+  }
+
+  function reactivateCourse(id) {
+    api.courses.setActive(id, true).then(function(){
+      UI.toast('Course reactivated','success');
+      loadCourses();
+    }).catch(function(e){ UI.toast(e.message,'error'); });
   }
 
   function renderOverviewCourses() {
@@ -256,6 +288,7 @@
     document.getElementById('course-title').value   = '';
     document.getElementById('course-desc').value    = '';
     document.getElementById('course-price').value   = '0';
+    document.getElementById('course-category').value = 'OTHER';
     document.getElementById('course-image').value    = '';
     document.getElementById('course-video').value    = '';
     clearMediaPreviews();
@@ -271,6 +304,7 @@
     document.getElementById('course-title').value   = c.title;
     document.getElementById('course-desc').value    = c.description || '';
     document.getElementById('course-price').value   = c.price || 0;
+    document.getElementById('course-category').value = c.category || 'OTHER';
     // show current media; leaving the file inputs empty keeps it unchanged
     if (c.imageUrl) {
       var img = document.getElementById('course-image-preview');
@@ -318,6 +352,7 @@
     fd.append('title', title);
     fd.append('description', desc);
     fd.append('price', price);
+    fd.append('category', document.getElementById('course-category').value);
     var imgFile = document.getElementById('course-image').files[0];
     var vidFile = document.getElementById('course-video').files[0];
     if (imgFile) fd.append('image', imgFile);
@@ -342,7 +377,7 @@
     var btn = document.getElementById('delete-confirm-btn');
     UI.setLoading(btn, true);
     api.courses.delete(deleteTargetId, false).then(function() {
-      UI.toast('Course deleted','success');
+      UI.toast('Course deactivated','success');
       UI.closeModal('delete-modal');
       loadCourses();
     }).catch(function(e){ UI.toast(e.message,'error'); })

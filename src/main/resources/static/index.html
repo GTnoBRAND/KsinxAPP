@@ -30,9 +30,9 @@
   <div class="hero-bg"></div>
   <div class="hero-grid container">
     <div class="hero-content">
-      <div class="hero-badge">🎓 The developer's learning platform</div>
-      <h1 class="hero-title">Master Tech Skills<br/><span class="highlight">Ship Real Projects</span></h1>
-      <p class="hero-subtitle">Structured courses taught by industry engineers. Learn Java, Spring Boot, DevOps and more — with hands-on assignments graded by real instructors.</p>
+      <div class="hero-badge">🌱 Learn anything you’re curious about</div>
+      <h1 class="hero-title">Learn What You Love<br/><span class="highlight">Master What Matters</span></h1>
+      <p class="hero-subtitle">From programming and cloud to languages, math, chemistry and biology — explore courses across many disciplines, build real projects, and get graded by instructors who actually read your work.</p>
       <div class="hero-actions">
         <a href="#courses" class="btn btn-primary btn-lg">Browse Courses</a>
         <a href="/register.html" class="btn btn-outline btn-lg">Start for Free</a>
@@ -44,9 +44,9 @@
       </div>
     </div>
     <div class="hero-visual">
-      <div class="hero-card"><div class="hero-card-icon green">💻</div><div class="hero-card-info"><h4>Spring Boot Mastery</h4><p>REST APIs, Security, Microservices</p></div></div>
-      <div class="hero-card"><div class="hero-card-icon blue">🚀</div><div class="hero-card-info"><h4>DevOps &amp; Cloud</h4><p>Docker, Kubernetes, CI/CD</p></div></div>
-      <div class="hero-card"><div class="hero-card-icon orange">🔬</div><div class="hero-card-info"><h4>Live Code Reviews</h4><p>Real feedback from instructors</p></div></div>
+      <div class="hero-card"><div class="hero-card-icon green">💻</div><div class="hero-card-info"><h4>Programming &amp; Cloud</h4><p>Web dev, DevOps, software design</p></div></div>
+      <div class="hero-card"><div class="hero-card-icon blue">🌍</div><div class="hero-card-info"><h4>Languages &amp; Humanities</h4><p>Foreign languages and more</p></div></div>
+      <div class="hero-card"><div class="hero-card-icon orange">🔬</div><div class="hero-card-info"><h4>Math &amp; Sciences</h4><p>Math, chemistry, biology</p></div></div>
     </div>
   </div>
 </section>
@@ -78,10 +78,22 @@
       <h2 class="section-title">Featured Courses</h2>
       <p class="section-subtitle">Handpicked courses to take you from zero to production-ready.</p>
     </div>
-    <div class="courses-filter">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="free">Free</button>
-      <button class="filter-btn" data-filter="paid">Paid</button>
+    <div class="courses-filter" id="category-filter">
+      <button class="filter-btn active" data-category="all">All</button>
+      <button class="filter-btn" data-category="PROGRAMMING">💻 Programming</button>
+      <button class="filter-btn" data-category="WEB_DEVELOPMENT">🌐 Web Dev</button>
+      <button class="filter-btn" data-category="CLOUD">☁️ Cloud</button>
+      <button class="filter-btn" data-category="GAMING">🎮 Gaming</button>
+      <button class="filter-btn" data-category="FOREIGN_LANGUAGES">🗣 Languages</button>
+      <button class="filter-btn" data-category="MATH">➗ Math</button>
+      <button class="filter-btn" data-category="CHEMISTRY">⚗️ Chemistry</button>
+      <button class="filter-btn" data-category="BIOLOGY">🧬 Biology</button>
+      <button class="filter-btn" data-category="OTHER">📚 Other</button>
+    </div>
+    <div class="courses-filter" id="price-filter">
+      <button class="filter-btn active" data-price="all">All Prices</button>
+      <button class="filter-btn" data-price="free">Free</button>
+      <button class="filter-btn" data-price="paid">Paid</button>
     </div>
     <div id="courses-grid" class="courses-grid">
       <div class="loading-overlay" style="grid-column:1/-1">
@@ -110,12 +122,10 @@
       <p>A modern learning management system built for developers, by developers.</p>
     </div>
     <div class="footer-col"><h4>Platform</h4><ul><li><a href="#courses">Courses</a></li><li><a href="/login.html">Login</a></li><li><a href="/register.html">Register</a></li></ul></div>
-    <div class="footer-col"><h4>Account</h4><ul><li><a href="/dashboard.html">Dashboard</a></li><li><a href="/teacher.html">Teacher Portal</a></li><li><a href="/admin.html">Admin</a></li></ul></div>
     <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
   </div>
   <div class="footer-bottom">
     <span>© 2024 LutorLMS. All rights reserved.</span>
-    <span>Built with Spring Boot &amp; ❤️</span>
   </div>
 </footer>
 
@@ -126,19 +136,27 @@
   Auth.initNavUser();
 
   var allCourses = [];
-  var currentFilter = 'all';
+  var currentCategory = 'all';
+  var currentPrice = 'all';
 
   function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function ratingLabel(c) {
+    if (c.ratingCount && c.ratingCount > 0) {
+      return '⭐ ' + Number(c.averageRating).toFixed(1) + ' (' + c.ratingCount + ')';
+    }
+    return '⭐ No ratings yet';
+  }
 
   function renderCourses() {
     var grid = document.getElementById('courses-grid');
     var filtered = allCourses.filter(function(c) {
-      if (currentFilter === 'free') return !c.price || c.price == 0;
-      if (currentFilter === 'paid') return c.price && c.price > 0;
+      if (currentPrice === 'free' && !(!c.price || c.price == 0)) return false;
+      if (currentPrice === 'paid' && !(c.price && c.price > 0))   return false;
       return true;
     });
     if (!filtered.length) {
-      UI.renderEmpty(grid, '📦', 'No courses found', 'Try changing the filter above.');
+      UI.renderEmpty(grid, '📦', 'No courses found', 'Try changing the filters above.');
       return;
     }
     grid.innerHTML = filtered.map(function(c) {
@@ -157,7 +175,7 @@
           '<p class="course-desc">' + esc(c.description || 'No description provided.') + '</p>' +
           '<div class="course-meta">' +
             '<span class="course-meta-item">📦 ' + (c.totalModules || 0) + ' modules</span>' +
-            '<span class="course-meta-item">⭐ 4.8</span>' +
+            '<span class="course-meta-item">' + ratingLabel(c) + '</span>' +
           '</div>' +
           '<div class="course-price">' +
             (c.price && c.price > 0
@@ -170,13 +188,18 @@
     }).join('');
   }
 
-  api.courses.all(1, 12).then(function(data) {
-    allCourses = Array.isArray(data) ? data : (data && data.content ? data.content : []);
-    document.getElementById('stat-courses').textContent = allCourses.length + '+';
-    renderCourses();
-  }).catch(function() {
-    UI.renderEmpty(document.getElementById('courses-grid'), '😞', 'Could not load courses', 'Please try again later.');
-  });
+  function loadCourses() {
+    var opts = currentCategory && currentCategory !== 'all' ? { category: currentCategory } : {};
+    return api.courses.all(1, 24, opts).then(function(data) {
+      allCourses = Array.isArray(data) ? data : (data && data.content ? data.content : []);
+      document.getElementById('stat-courses').textContent = allCourses.length + '+';
+      renderCourses();
+    }).catch(function() {
+      UI.renderEmpty(document.getElementById('courses-grid'), '😞', 'Could not load courses', 'Please try again later.');
+    });
+  }
+
+  loadCourses();
 
   api.auth.allUsers().then(function(users) {
     var students = (Array.isArray(users) ? users : []).filter(function(u){ return u.role === 'STUDENT'; });
@@ -185,11 +208,19 @@
     document.getElementById('stat-students').textContent = '100+';
   });
 
-  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+  document.querySelectorAll('#category-filter .filter-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('#category-filter .filter-btn').forEach(function(b){ b.classList.remove('active'); });
       btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
+      currentCategory = btn.dataset.category;
+      loadCourses();
+    });
+  });
+  document.querySelectorAll('#price-filter .filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#price-filter .filter-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentPrice = btn.dataset.price;
       renderCourses();
     });
   });

@@ -117,6 +117,20 @@
       <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="course-desc" rows="3" placeholder="Course description…"></textarea></div>
       <div class="form-group"><label class="form-label">Price (USD) — 0 for free</label><input class="form-control" type="number" id="course-price" value="0" min="0" step="0.01" /></div>
       <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-control" id="course-category">
+          <option value="PROGRAMMING">Programming</option>
+          <option value="WEB_DEVELOPMENT">Web Development</option>
+          <option value="CLOUD">Cloud</option>
+          <option value="GAMING">Gaming</option>
+          <option value="FOREIGN_LANGUAGES">Foreign Languages</option>
+          <option value="MATH">Math</option>
+          <option value="CHEMISTRY">Chemistry</option>
+          <option value="BIOLOGY">Biology</option>
+          <option value="OTHER" selected>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label class="form-label">Cover Photo <span style="color:var(--text-muted)">(optional)</span></label>
         <input class="form-control" type="file" id="course-image" accept="image/*" />
         <img id="course-image-preview" alt="Cover preview" class="media-preview" style="display:none" />
@@ -510,6 +524,7 @@
     fd.append('title', title);
     fd.append('description', desc);
     fd.append('price', price);
+    fd.append('category', document.getElementById('course-category').value);
     var imgFile = document.getElementById('course-image').files[0];
     var vidFile = document.getElementById('course-video').files[0];
     if (imgFile) fd.append('image', imgFile);
