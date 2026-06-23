@@ -7,20 +7,20 @@ import org.jas.ksinxapp.dtos.CourseCreateRequest;
 import org.jas.ksinxapp.dtos.CourseResponse;
 import org.jas.ksinxapp.mappers.CourseMapper;
 import org.jas.ksinxapp.model.Course;
+import org.jas.ksinxapp.model.CourseCategory;
+import org.jas.ksinxapp.repo.CourseRatingRepo;
 import org.jas.ksinxapp.repo.CourseRepo;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,15 +31,16 @@ public class CourseService {
     private final CourseRepo courseRepo;
     private final CourseMapper courseMapper;
     private final MinIoStorageService minIoStorageService;
-    private final RedisTemplate<String, Course> redisTemplate;
-    private final String CACHE_KEY_PREFIX = "product: ";
-    private final long MANUAL_CACHE_TTL = 5;
+    private final CourseRatingRepo courseRatingRepo;
 
 
     @Transactional
     public CourseResponse createResponse(CourseCreateRequest request, MultipartFile image, MultipartFile video) {
         //convert dto to entity
         Course course = courseMapper.toEntity(request);
+        if (request.category() == null) {
+            course.setCategory(CourseCategory.OTHER);
+        }
 
         //store the cover photo and the teaser video, if provided
         if (image != null && !image.isEmpty()) {
@@ -52,59 +53,50 @@ public class CourseService {
         //save to postgresql
         Course savedCourse = courseRepo.save(course);
 
-
-
         //convert back to dto and return
-        return courseMapper.toResponse(savedCourse);
+        return toEnrichedResponse(savedCourse);
     }
 
     @Transactional
-    public List<CourseResponse> getAllResponse(int pageNo, int pageSize, String sortBy, String sortDir) {
+    public List<CourseResponse> getAllResponse(int pageNo, int pageSize, String sortBy, String sortDir,
+                                               CourseCategory category, boolean includeInactive) {
 
-        //handle sorting
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
-                ?Sort.by(sortBy).ascending()
+                ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(pageNo - 1, pageSize, sort);
 
-        //handle pagination
-        Pageable pageable = PageRequest.of(pageNo -1, pageSize, sort);
+        List<Course> courses;
+        if (includeInactive) {
+            //admin/teacher view — every course, optionally filtered by category
+            courses = courseRepo.findAll(pageable)
+                    .stream()
+                    .filter(c -> category == null || category.equals(c.getCategory()))
+                    .collect(Collectors.toList());
+        } else if (category != null) {
+            courses = courseRepo.findByIsActiveTrueAndCategory(category, pageable).getContent();
+        } else {
+            courses = courseRepo.findByIsActiveTrue(pageable).getContent();
+        }
 
-//        //handle dynamic filtering with specification
-        return courseRepo.findByIsActiveTrue(pageable)
-                .stream()
-                .map(courseMapper::toResponse)
+        return courses.stream()
+                .map(this::toEnrichedResponse)
                 .collect(Collectors.toList());
     }
+
     @Cacheable(
             value = "course",
             key = "#id"
     )
     @Transactional
     public CourseResponse findById(Long id){
-
-        var cacheKey = CACHE_KEY_PREFIX + id;
-
-//        Course courseFromCache = redisTemplate.opsForValue()
-//                .get(cacheKey);
-//        if(courseFromCache != null){
-//            if(!courseFromCache.getIsActive()){
-//                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
-//            }
-//            log.info("Course is found in cache: id{}", id);
-//            return courseMapper.toResponseDto(courseFromCache);
-//        }
-
-
         Course course = courseRepo.findById(id)
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "course not found"));
-            if(!course.getIsActive()){
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found from DB");
-            }
-//            log.info("Course is found from DB");
-//            redisTemplate.opsForValue()
-//                    .set(cacheKey, courseFromDb, MANUAL_CACHE_TTL, TimeUnit.MINUTES);
-        return courseMapper.toResponse(course);
+        //inactive courses are still returned so the UI can show the "inactive" state;
+        //enrolment is blocked separately in EnrollmentService
+        return toEnrichedResponse(course);
     }
+
     @CacheEvict(
             value = "course",
             key = "#id"
@@ -125,33 +117,41 @@ public class CourseService {
             course.setVideoUrl(minIoStorageService.publicUpload(video));
         }
 
-        //invalidate the cache
-//        var cacheKey = CACHE_KEY_PREFIX + id;
-//        redisTemplate.delete(cacheKey);
-//        log.info("Cache invalidated for course: id{}", id);
-
-        return courseMapper.toResponseDto(course);
+        return toEnrichedResponse(course);
     }
+
     @CacheEvict(
             value = "course",
             key = "#id"
     )
     @Transactional
-    public CourseResponse deleteById(Long id, Boolean isActive){
+    public CourseResponse setActive(Long id, Boolean isActive){
         Course course = courseRepo.findById(id)
-                .orElseThrow(()->new RuntimeException("Course not found"));
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
+        course.setIsActive(Boolean.TRUE.equals(isActive));
+        courseRepo.save(course);
 
-        if(Boolean.TRUE.equals(course.getIsActive())){  //null safe check
-            course.setIsActive(false);
-            courseRepo.save(course); //actually persist the changes
-        }
+        return toEnrichedResponse(course);
+    }
 
-        //invalidate cache
-//        var cacheKey = CACHE_KEY_PREFIX+ id;
-//        redisTemplate.delete(cacheKey);
-//        log.info("Cache invalidated for deleted course: id{}", id);
-
-        return courseMapper.toResponseDto(course);
+    private CourseResponse toEnrichedResponse(Course course) {
+        Double avg = courseRatingRepo.findAverageByCourseId(course.getId());
+        Long count = courseRatingRepo.countByCourseId(course.getId());
+        int totalModules = course.getModules() != null ? course.getModules().size() : 0;
+        double rounded = avg == null ? 0.0 : Math.round(avg * 10.0) / 10.0;
+        return new CourseResponse(
+                course.getId(),
+                course.getTitle(),
+                course.getDescription(),
+                course.getPrice(),
+                course.getImageUrl(),
+                course.getVideoUrl(),
+                totalModules,
+                course.getCategory(),
+                course.getIsActive(),
+                rounded,
+                count
+        );
     }
 }

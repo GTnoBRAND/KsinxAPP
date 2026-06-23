@@ -78,6 +78,8 @@ public class SecurityConfig {
                                 "/api/v1/users/verify", "/api/v1/users/resend-verification",
                                 "/api/v1/modules/course/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/course/*/rating").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/course/*/rate").hasRole("STUDENT")
                         // Role-based
                         .requestMatchers("/api/v1/users/delete/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/*/role").hasRole("ADMIN")
@@ -96,6 +98,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/files/upload").hasRole("TEACHER")
                         .requestMatchers(
                                 "/api/course/update/**", "/api/course/add", "/api/course/delete/**",
+                                "/api/course/*/status",
                                 "/api/v1/tasks", "/api/v1/submission/**", "/api/v1/modules/update/**"
                         ).hasRole("TEACHER")
                         .anyRequest().authenticated()
