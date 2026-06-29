@@ -18,7 +18,7 @@ public class SitemapController {
         this.baseUrl = baseUrl;
     }
 
-    @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_ATOM_XML_VALUE)
+    @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     public String sitemap(Model model){
         model.addAttribute("baseUrl", baseUrl);
         model.addAttribute("courses", service.findActiveCourseForSitemap());
