@@ -1,15 +1,16 @@
 package org.jas.ksinxapp.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jas.ksinxapp.dtos.CourseCreateRequest;
 import org.jas.ksinxapp.dtos.CourseResponse;
+import org.jas.ksinxapp.dtos.CourseSitemapProjection;
 import org.jas.ksinxapp.mappers.CourseMapper;
 import org.jas.ksinxapp.model.Course;
 import org.jas.ksinxapp.model.CourseCategory;
 import org.jas.ksinxapp.repo.CourseRatingRepo;
 import org.jas.ksinxapp.repo.CourseRepo;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
@@ -82,6 +83,11 @@ public class CourseService {
         return courses.stream()
                 .map(this::toEnrichedResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseSitemapProjection> findActiveCourseForSitemap(){
+        return courseRepo.findByIsActiveTrue();
     }
 
     @Cacheable(
