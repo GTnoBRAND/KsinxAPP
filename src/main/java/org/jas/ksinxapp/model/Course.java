@@ -3,8 +3,12 @@ package org.jas.ksinxapp.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -39,6 +43,12 @@ public class Course {
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
     private List<Enrollment> enrollments;
+
+    @UpdateTimestamp
+    private Instant updatedAt;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     private Boolean isActive = true;
 
