@@ -23,9 +23,6 @@ public class ThymeleafXmlResolver {
         resolver.setCharacterEncoding("UTF-8");
         resolver.setResolvablePatterns(Set.of("sitemap"));
         resolver.setOrder(1);
-        System.out.println("XML TEMPLATE RESOLVER REGISTERED: prefix=" + resolver.getPrefix()
-                + ", suffix=" + resolver.getSuffix()
-                + ", patterns=" + resolver.getResolvablePatterns());
         return resolver;
     }
 }

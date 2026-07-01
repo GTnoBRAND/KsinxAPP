@@ -71,6 +71,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/*.html", "/css/**", "/js/**", "/img/**").permitAll()
                         // OAuth2 authorization redirect (Spring Security's own endpoint)
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers("/", "/api/v1/courses").permitAll()
+                        .requestMatchers("/", "/courses", "/courses/**", "/login", "/register", "/sitemap.xml").permitAll()
                         // Public API
                         .requestMatchers(
                                 "/api/course/all", "/api/course/find/**",
