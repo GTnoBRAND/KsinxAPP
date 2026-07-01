@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
@@ -24,10 +25,11 @@ import java.util.Set;
 public class EmailTemplateConfig implements AsyncConfigurer {
 
     @Bean
-    public SpringTemplateEngine emailTemplateEngine(){
+    public SpringTemplateEngine emailTemplateEngine(SpringResourceTemplateResolver xmlTemplateResolver){
         SpringTemplateEngine engine = new SpringTemplateEngine();
         engine.addTemplateResolver(htmlTemplateResolver());
         engine.addTemplateResolver(txtTemplateResolver());
+        engine.addTemplateResolver(xmlTemplateResolver);
         return engine;
     }
 
