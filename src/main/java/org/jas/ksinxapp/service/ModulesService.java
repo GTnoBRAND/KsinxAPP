@@ -10,6 +10,7 @@ import org.jas.ksinxapp.repo.CourseRepo;
 import org.jas.ksinxapp.repo.ModulesRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,10 +22,11 @@ public class ModulesService {
     private final ModulesRepo modulesRepo;
     private final ModulesMapper modulesMapper;
     private final CourseRepo courseRepo;
+    private final MinIoStorageService minIoStorageService;
 
     @Transactional
     //create a new lesson in a course
-    public ModulesResponse createModule(ModulesRequest request) {
+    public ModulesResponse createModule(ModulesRequest request, MultipartFile video) {
 
         //fetch the actual course entity
         Course course = courseRepo.findById(request.courseId())
@@ -34,6 +36,9 @@ public class ModulesService {
 
         //manually attach managed course entity we just fetched
         newModule.setCourse(course);
+        if(video != null && !video.isEmpty()){
+            newModule.setVideoUrl(minIoStorageService.publicUpload(video));
+        }
 
         //save to postgresql
         Modules savedModule = modulesRepo.save(newModule);

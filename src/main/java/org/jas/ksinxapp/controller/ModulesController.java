@@ -7,6 +7,7 @@ import org.jas.ksinxapp.service.ModulesService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,8 +22,9 @@ public class ModulesController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ModulesResponse> createModule(@Valid @RequestBody ModulesRequest request) {
-        ModulesResponse response = modulesService.createModule(request);
+    public ResponseEntity<ModulesResponse> createModule(@Valid @RequestBody ModulesRequest request,
+                                                        @RequestParam(required = false) MultipartFile video) {
+        ModulesResponse response = modulesService.createModule(request, video);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
