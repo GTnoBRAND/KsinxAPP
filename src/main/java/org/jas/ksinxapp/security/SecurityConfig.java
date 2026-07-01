@@ -73,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers("/", "/api/v1/courses").permitAll()
                         .requestMatchers("/", "/courses", "/courses/**", "/login", "/register", "/sitemap.xml").permitAll()
+                        .requestMatchers("/*.ico", "/*.png", "/*.svg", "/*.webmanifest").permitAll()
                         // Public API
                         .requestMatchers(
                                 "/api/course/all", "/api/course/find/**",
