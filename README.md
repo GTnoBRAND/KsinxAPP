@@ -174,5 +174,19 @@ Schema lives in `src/main/resources/db/migration/V*.sql` (Flyway). Hibernate run
 
 ---
 
+
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 17-47-02" src="https://github.com/user-attachments/assets/678a14a8-444a-48f2-af5a-573ecd718f11" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 17-47-10" src="https://github.com/user-attachments/assets/c68296d5-a4f4-4c47-a603-b0c2c6d9e7b6" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 17-47-26" src="https://github.com/user-attachments/assets/38cee3eb-cebb-41c8-851d-42b4d9e52190" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 17-52-51" src="https://github.com/user-attachments/assets/9bd77665-b4a9-43d2-9ff2-f39f2bdf282b" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 17-53-00" src="https://github.com/user-attachments/assets/37ff377c-f279-4b84-b787-60be75921ee5" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 18-11-05" src="https://github.com/user-attachments/assets/961d0b40-521f-44f1-a75b-1036bf177483" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 18-11-17" src="https://github.com/user-attachments/assets/d2c1879d-33a4-4a0e-b55e-9cdf4444cdfc" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 18-11-40" src="https://github.com/user-attachments/assets/45461d8d-d134-4725-9636-0114f27ab511" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 18-12-19" src="https://github.com/user-attachments/assets/4b8f5ea6-f54b-47be-9db5-9295d7232130" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 18-12-32" src="https://github.com/user-attachments/assets/9e1d9d3c-b720-4a63-8fbb-140704e78126" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 18-12-40" src="https://github.com/user-attachments/assets/ca9d1cb8-dc84-4e0f-bc5d-cb12468df441" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 18-14-53" src="https://github.com/user-attachments/assets/4145a502-cc13-4d05-a1e1-2c8e7a88bdaf" />
+<img width="2467" height="1285" alt="Screenshot From 2026-07-13 18-14-57" src="https://github.com/user-attachments/assets/437e9ad1-bba2-43e8-94a4-f60a2990af2c" />
 <img width="2467" height="1285" alt="image" src="https://github.com/user-attachments/assets/c18da9a4-1424-4ae5-84f5-4f3095abdaf8" />
 
