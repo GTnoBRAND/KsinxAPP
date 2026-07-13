@@ -174,6 +174,5 @@ Schema lives in `src/main/resources/db/migration/V*.sql` (Flyway). Hibernate run
 
 ---
 
-## 📄 License
+<img width="2467" height="1285" alt="image" src="https://github.com/user-attachments/assets/c18da9a4-1424-4ae5-84f5-4f3095abdaf8" />
 
-Not yet licensed. Add a `LICENSE` file before open-sourcing or distributing.
